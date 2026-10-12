@@ -1,0 +1,14 @@
+spring:
+  config:
+    import: file:.env[.properties]
+  application:
+    name: navigator
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/navigator
+    username: ${DB_USERNAME:navigator}
+    password: ${DB_PASSWORD}
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
