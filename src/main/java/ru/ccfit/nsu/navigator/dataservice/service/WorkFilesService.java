@@ -8,8 +8,8 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 import ru.ccfit.nsu.navigator.dataservice.dto.DownloadFileResponse;
 import ru.ccfit.nsu.navigator.dataservice.dto.WorkResponse;
-import ru.ccfit.nsu.navigator.dataservice.entity.OriginalFiles;
-import ru.ccfit.nsu.navigator.dataservice.repository.OriginalFilesRepository;
+import ru.ccfit.nsu.navigator.dataservice.entity.WorkFiles;
+import ru.ccfit.nsu.navigator.dataservice.repository.WorkFilesRepository;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -17,10 +17,10 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 @Service
-public class OriginalFilesService {
-    private final OriginalFilesRepository repository;
+public class WorkFilesService {
+    private final WorkFilesRepository repository;
 
-    public OriginalFilesService(OriginalFilesRepository repository) {
+    public WorkFilesService(WorkFilesRepository repository) {
         this.repository = repository;
     }
 
@@ -31,7 +31,7 @@ public class OriginalFilesService {
             MultipartFile workFile
     )throws IOException{
         //TODO validation files
-        OriginalFiles originalFiles = new OriginalFiles(
+        WorkFiles workFiles = new WorkFiles(
                 surveyFile.getOriginalFilename(),
                 surveyFile.getBytes(),
                 calculationFile.getOriginalFilename(),
@@ -40,12 +40,12 @@ public class OriginalFilesService {
                 workFile.getBytes()
         );
 
-        return repository.save(originalFiles).getId();
+        return repository.save(workFiles).getId();
     }
 
     @Transactional(readOnly = true)
     public WorkResponse getWorkInfo(Long id){
-        OriginalFiles files = repository.findById(id)
+        WorkFiles files = repository.findById(id)
                 .orElseThrow(()-> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         "Work not found"
@@ -61,7 +61,7 @@ public class OriginalFilesService {
 
     @Transactional(readOnly = true)
     public DownloadFileResponse getFile(Long id, String type) {
-        OriginalFiles files = repository.findById(id)
+        WorkFiles files = repository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         "Work not found"
@@ -89,7 +89,7 @@ public class OriginalFilesService {
 
     @Transactional(readOnly = true)
     public byte[] getFilesArchive(Long id) throws IOException {
-        OriginalFiles files = repository.findById(id)
+        WorkFiles files = repository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         "Work not found"

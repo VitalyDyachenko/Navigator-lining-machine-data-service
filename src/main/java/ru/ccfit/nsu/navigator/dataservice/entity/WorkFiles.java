@@ -6,7 +6,7 @@ import org.hibernate.type.SqlTypes;
 
 @Entity
 @Table (name = "original_files")
-public class OriginalFiles {
+public class WorkFiles {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -33,10 +33,10 @@ public class OriginalFiles {
     @Column(name = "work_file", nullable = false)
     private byte[] workFile;
 
-    protected OriginalFiles() {
+    protected WorkFiles() {
     }
 
-    public OriginalFiles(
+    public WorkFiles(
             String surveyFilename,
             byte[] surveyFile,
             String calculationFilename,

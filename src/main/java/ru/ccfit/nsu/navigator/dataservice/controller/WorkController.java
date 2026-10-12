@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import ru.ccfit.nsu.navigator.dataservice.dto.DownloadFileResponse;
 import ru.ccfit.nsu.navigator.dataservice.dto.WorkResponse;
-import ru.ccfit.nsu.navigator.dataservice.service.OriginalFilesService;
+import ru.ccfit.nsu.navigator.dataservice.service.WorkFilesService;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -19,9 +19,9 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/works")
 public class WorkController {
-    private final OriginalFilesService service;
+    private final WorkFilesService service;
 
-    public WorkController(OriginalFilesService service) {
+    public WorkController(WorkFilesService service) {
         this.service = service;
     }
 
@@ -61,7 +61,7 @@ public class WorkController {
     }
 
     @GetMapping("/{id}/files")
-    public ResponseEntity<byte[]> downloadWork(
+    public ResponseEntity<byte[]> downloadWorkFiles(
             @PathVariable Long id
     ) throws IOException {
         byte[] archive = service.getFilesArchive(id);
