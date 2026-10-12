@@ -59,4 +59,21 @@ public class WorkController {
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .body(file.content());
     }
+
+    @GetMapping("/{id}/files")
+    public ResponseEntity<byte[]> downloadWork(
+            @PathVariable Long id
+    ) throws IOException {
+        byte[] archive = service.getFilesArchive(id);
+
+        return ResponseEntity.ok().
+                header(
+                        HttpHeaders.CONTENT_DISPOSITION,
+                        ContentDisposition.attachment()
+                                .filename("work-" + id + ".zip")
+                                .build()
+                                .toString()
+                ).contentType(MediaType.parseMediaType("application/zip"))
+                .body(archive);
+    }
 }

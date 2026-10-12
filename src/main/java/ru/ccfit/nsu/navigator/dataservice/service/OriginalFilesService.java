@@ -11,7 +11,10 @@ import ru.ccfit.nsu.navigator.dataservice.dto.WorkResponse;
 import ru.ccfit.nsu.navigator.dataservice.entity.OriginalFiles;
 import ru.ccfit.nsu.navigator.dataservice.repository.OriginalFilesRepository;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 @Service
 public class OriginalFilesService {
@@ -82,5 +85,37 @@ public class OriginalFilesService {
                     "Unknown file type"
             );
         };
+    }
+
+    @Transactional(readOnly = true)
+    public byte[] getFilesArchive(Long id) throws IOException {
+        OriginalFiles files = repository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Work not found"
+                ));
+
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+
+        try (ZipOutputStream zip = new ZipOutputStream(output)) {
+            addToZip(zip, files.getSurveyFilename(), files.getSurveyFile());
+            addToZip(zip, files.getCalculationFilename(), files.getCalculationFile());
+            addToZip(zip, files.getWorkFilename(), files.getWorkFile());
+        }
+
+        return output.toByteArray();
+    }
+
+    private void addToZip(
+            ZipOutputStream zip,
+            String filename,
+            byte[] content
+    ) throws IOException {
+        String safeName = filename.replace('\\', '/');
+        safeName = safeName.substring(safeName.lastIndexOf('/') + 1);
+
+        zip.putNextEntry(new ZipEntry(safeName));
+        zip.write(content);
+        zip.closeEntry();
     }
 }
