@@ -2,11 +2,9 @@ package ru.ccfit.nsu.navigator.dataservice.controller;
 
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import ru.ccfit.nsu.navigator.dataservice.dto.WorkResponse;
 import ru.ccfit.nsu.navigator.dataservice.service.OriginalFilesService;
 
 import java.io.IOException;
@@ -30,5 +28,11 @@ public class WorkController {
     )throws IOException {
         Long id = service.saveFiles(surveyFile, calculationFile,workFile);
         return ResponseEntity.ok(Map.of("id", id));
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<WorkResponse> getWorkInfo(@PathVariable Long id){
+        WorkResponse response = service.getWorkInfo(id);
+        return ResponseEntity.ok(response);
     }
 }

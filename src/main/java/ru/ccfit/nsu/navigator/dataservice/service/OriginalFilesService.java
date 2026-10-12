@@ -1,9 +1,12 @@
 package ru.ccfit.nsu.navigator.dataservice.service;
 
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
+import ru.ccfit.nsu.navigator.dataservice.dto.WorkResponse;
 import ru.ccfit.nsu.navigator.dataservice.entity.OriginalFiles;
 import ru.ccfit.nsu.navigator.dataservice.repository.OriginalFilesRepository;
 
@@ -34,5 +37,21 @@ public class OriginalFilesService {
         );
 
         return repository.save(originalFiles).getId();
+    }
+
+    @Transactional(readOnly = true)
+    public WorkResponse getWorkInfo(Long id){
+        OriginalFiles files = repository.findById(id)
+                .orElseThrow(()-> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Work not found"
+                ));
+
+        return new WorkResponse(
+                files.getId(),
+                files.getSurveyFilename(),
+                files.getCalculationFilename(),
+                files.getWorkFilename()
+        );
     }
 }
