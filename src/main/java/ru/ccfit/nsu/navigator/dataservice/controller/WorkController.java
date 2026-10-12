@@ -1,13 +1,18 @@
 package ru.ccfit.nsu.navigator.dataservice.controller;
 
 
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import ru.ccfit.nsu.navigator.dataservice.dto.DownloadFileResponse;
 import ru.ccfit.nsu.navigator.dataservice.dto.WorkResponse;
 import ru.ccfit.nsu.navigator.dataservice.service.OriginalFilesService;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 
@@ -34,5 +39,24 @@ public class WorkController {
     public ResponseEntity<WorkResponse> getWorkInfo(@PathVariable Long id){
         WorkResponse response = service.getWorkInfo(id);
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{id}/files/{type}")
+    public ResponseEntity<byte[]> downloadFile(
+            @PathVariable Long id,
+            @PathVariable String type
+    ) {
+        DownloadFileResponse file = service.getFile(id, type);
+
+        return ResponseEntity.ok()
+                .header(
+                        HttpHeaders.CONTENT_DISPOSITION,
+                        ContentDisposition.attachment()
+                                .filename(file.filename(), StandardCharsets.UTF_8)
+                                .build()
+                                .toString()
+                )
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .body(file.content());
     }
 }
