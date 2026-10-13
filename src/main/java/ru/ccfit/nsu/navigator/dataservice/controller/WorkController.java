@@ -71,6 +71,19 @@ public class WorkController {
     @Operation(
             summary = "Получить информацию о файлах работы"
     )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Успешно"),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Работа не найдена. `code`: `WORK_NOT_FOUND`",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Неверный формат ID. `code`: `BAD_REQUEST`",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            )
+    })
     @GetMapping(value  = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<WorkResponse> getWorkInfo(@PathVariable Long id){
         WorkResponse response = service.getWorkInfo(id);
