@@ -5,12 +5,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.restdocs.test.autoconfigure.AutoConfigureRestDocs;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import ru.ccfit.nsu.navigator.dataservice.config.TraceIdFilter;
 import ru.ccfit.nsu.navigator.dataservice.dto.WorkFilesResponse;
 import ru.ccfit.nsu.navigator.dataservice.exception.WorkNotFoundException;
 import ru.ccfit.nsu.navigator.dataservice.service.WorkFilesService;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.springframework.restdocs.request.RequestDocumentation.*;
 import static ru.ccfit.nsu.navigator.dataservice.controller.EndpointDocumentation.endpoint;
 
 import static org.mockito.ArgumentMatchers.eq;
@@ -21,10 +25,10 @@ import static org.springframework.restdocs.operation.preprocess.Preprocessors.pr
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.prettyPrint;
 import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath;
 import static org.springframework.restdocs.payload.PayloadDocumentation.responseFields;
-import static org.springframework.restdocs.request.RequestDocumentation.parameterWithName;
-import static org.springframework.restdocs.request.RequestDocumentation.pathParameters;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.multipart;
+
 
 @WebMvcTest(WorkController.class)
 @AutoConfigureRestDocs
@@ -41,11 +45,12 @@ class WorkControllerTest {
 
 	@Test
 	void getWorkFilesInfo_shouldReturnWorkFiles() throws Exception {
+		// TODO заменить пример на реальный с реальными расширениями
 		WorkFilesResponse response = new WorkFilesResponse(
 				1L,
-				"survey.dat",
-				"calc.dat",
-				"work.dat"
+				"0914_0812.srv",
+				"0914_0812.dat",
+				"0914_0812.bin"
 		);
 		when(service.getWorkFilesInfo(eq(1L))).thenReturn(response);
 
@@ -80,4 +85,48 @@ class WorkControllerTest {
 						)
 				);
 	}
+
+	@Test
+	void uploadFiles_shouldSaveFilesAndReturnId() throws Exception {
+		// TODO заменить пример на реальный с реальными расширениями
+		MockMultipartFile surveyFile = new MockMultipartFile(
+				"surveyFile",
+				"0914_0812.srv",
+				"application/octet-stream",
+				"survey content".getBytes()
+		);
+		MockMultipartFile calculationFile = new MockMultipartFile(
+				"calculationFile",
+				"0914_0812.dat",
+				"application/octet-stream",
+				"calculation content".getBytes()
+		);
+		MockMultipartFile workFile = new MockMultipartFile(
+				"workFile",
+				"0914_0812.bin",
+				"application/octet-stream",
+				"work content".getBytes()
+		);
+
+		when(service.saveFiles(any(), any(), any())).thenReturn(42L);
+
+		mockMvc.perform(multipart("/api/works")
+						.file(surveyFile)
+						.file(calculationFile)
+						.file(workFile))
+				.andExpect(status().isOk())
+				.andDo(document("work-files/upload",
+						preprocessResponse(prettyPrint()),
+						endpoint(),
+						requestParts(
+								partWithName("surveyFile").description("Файл съёмки"),
+								partWithName("calculationFile").description("Файл проекта"),
+								partWithName("workFile").description("Файл выправки")
+						),
+						responseFields(
+								fieldWithPath("id").description("Уникальный ID созданной записи с файлами")
+						)
+				));
+	}
+
 }

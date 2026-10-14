@@ -33,22 +33,16 @@ public class WorkController {
         this.service = service;
     }
 
-    @Operation(
-            summary = "Загрузить файлы работы",
-            description = "Загружает файлы работы в хранилище файлов."
-    )
-    @PostMapping(consumes = "multipart/form-data", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Загрузить файлы работы")
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<UploadResponse> uploadFiles(
-            @Parameter(description = "Файл съёмки", required = true)
             @RequestParam("surveyFile")
             MultipartFile surveyFile,
-            @Parameter(description = "Файл проекта", required = true)
             @RequestParam("calculationFile")
             MultipartFile calculationFile,
-            @Parameter(description = "Файл выправки", required = true)
             @RequestParam("workFile")
             MultipartFile workFile
-    )throws IOException {
+    ) throws IOException {
         Long id = service.saveFiles(surveyFile, calculationFile,workFile);
         return ResponseEntity.ok(new UploadResponse(id));
     }

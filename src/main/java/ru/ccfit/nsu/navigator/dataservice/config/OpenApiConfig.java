@@ -15,7 +15,7 @@ import org.springframework.context.annotation.Configuration;
 		)
 )
 public class OpenApiConfig {
-
+	/*
 	// Глобально очищает схемы ответов (content) у всех эндпоинтов
 	@Bean
 	public OpenApiCustomizer hideAllResponseSchemas() {
@@ -32,5 +32,5 @@ public class OpenApiConfig {
 				);
 			}
 		};
-	}
+	}*/
 }
