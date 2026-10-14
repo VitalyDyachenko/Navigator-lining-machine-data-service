@@ -24,3 +24,7 @@ spring:
     multipart:
       max-file-size: 10MB
       max-request-size: 30MB
+
+springdoc:
+  swagger-ui:
+    default-models-expand-depth: -1 # Скрывает секцию Schemas/Models внизу страницы

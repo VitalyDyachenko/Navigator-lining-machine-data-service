@@ -5,10 +5,10 @@
 :toc: left
 :toclevels: 3
 
-== Работа с файлами
+== Работа с файлами работ
 
-:op-title: Получить информацию о файле работы
-:op-id: works/get-info
-:op-error-title: Работа не найдена
-:op-error-id: works/get-info-not-found
+:op-title: Получить информацию о файлах работы
+:op-id: work-files/get-info
+:op-error-title: Файлы работы не найдены
+:op-error-id: work-files/get-info-not-found
 include::templates/endpoint.adoc[]

@@ -7,6 +7,13 @@ import org.springframework.restdocs.snippet.TemplatedSnippet;
 import java.util.HashMap;
 import java.util.Map;
 
+/*
+* Во время прогона теста автоматически создаёт endpoint.adoc, содержащий HTTP-метод и шаблон пути.
+*
+* Использование:
+* Передать endpoint() аргументом в MockMvcRestDocumentation.document("имя-операции", endpoint(), ...).
+* Важно: запрос в perform(...) должен строиться через RestDocumentationRequestBuilders.
+*/
 public class EndpointDocumentation {
 
 	public static Snippet endpoint() {

@@ -15,14 +15,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import ru.ccfit.nsu.navigator.dataservice.dto.DownloadFileResponse;
-import ru.ccfit.nsu.navigator.dataservice.dto.ErrorResponse;
 import ru.ccfit.nsu.navigator.dataservice.dto.UploadResponse;
-import ru.ccfit.nsu.navigator.dataservice.dto.WorkResponse;
+import ru.ccfit.nsu.navigator.dataservice.dto.WorkFilesResponse;
 import ru.ccfit.nsu.navigator.dataservice.service.WorkFilesService;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.Map;
 
 
 @RestController
@@ -39,19 +37,6 @@ public class WorkController {
             summary = "Загрузить файлы работы",
             description = "Загружает файлы работы в хранилище файлов."
     )
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Файлы успешно сохранены"),
-//            @ApiResponse(
-//                    responseCode = "400",
-//                    description = "Один из файлов отсутствует или не передан",
-//                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
-//            ),
-//            @ApiResponse(
-//                    responseCode = "500",
-//                    description = "Ошибка чтения или сохранения файла",
-//                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
-//            )
-    })
     @PostMapping(consumes = "multipart/form-data", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<UploadResponse> uploadFiles(
             @Parameter(description = "Файл съёмки", required = true)
@@ -68,34 +53,14 @@ public class WorkController {
         return ResponseEntity.ok(new UploadResponse(id));
     }
 
-    @Operation(
-            summary = "Получить информацию о файлах работы"
-    )
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Успешно"),
-            @ApiResponse(
-                    responseCode = "404",
-                    description = "Работа не найдена. `code`: `WORK_NOT_FOUND`",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
-            ),
-            @ApiResponse(
-                    responseCode = "400",
-                    description = "Неверный формат ID. `code`: `BAD_REQUEST`",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
-            )
-    })
-    @GetMapping(value  = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<WorkResponse> getWorkInfo(@PathVariable Long id){
-        WorkResponse response = service.getWorkInfo(id);
+    @Operation(summary = "Получить информацию о файлах работы")
+    @GetMapping("/{id}")
+    public ResponseEntity<WorkFilesResponse> getWorkFilesInfo(@PathVariable Long id){
+        WorkFilesResponse response = service.getWorkFilesInfo(id);
         return ResponseEntity.ok(response);
     }
 
     @Operation(summary = "Скачать 1 файл работы")
-    @ApiResponse(
-            responseCode = "200",
-            description = "Файл",
-            content = @Content(mediaType = MediaType.APPLICATION_OCTET_STREAM_VALUE)
-    )
     @GetMapping("/{id}/files/{type}")
     public ResponseEntity<byte[]> downloadFile(
             @Parameter(description = "ID работы")
@@ -120,11 +85,6 @@ public class WorkController {
     }
 
     @Operation(summary = "Скачать все файлы работы")
-    @ApiResponse(
-            responseCode = "200",
-            description = "ZIP-архив",
-            content = @Content(mediaType = "application/zip")
-    )
     @GetMapping("/{id}/files")
     public ResponseEntity<byte[]> downloadWorkFiles(
             @PathVariable Long id
