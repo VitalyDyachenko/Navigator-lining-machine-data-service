@@ -1,3 +1,5 @@
+pass:[<hr style="border: 0; height: 2px; background: #cbd5e1; margin: 48px 0 32px 0;">]
+
 === {op-title}
 
 include::{snippets}/{op-id}/endpoint.adoc[opts=optional]
@@ -16,13 +18,5 @@ endif::[]
 
 ==== Успешный ответ
 include::{snippets}/{op-id}/http-response.adoc[opts=optional]
+include::{snippets}/{op-id}/response-headers.adoc[opts=optional]
 include::{snippets}/{op-id}/response-fields.adoc[opts=optional]
-
-ifdef::op-error-id[]
-==== Ошибки
-===== {op-error-title}
-include::{snippets}/{op-error-id}/http-response.adoc[opts=optional]
-:op-error-id!:
-:op-error-title!:
-endif::[]
-pass:[<hr style="border: 0; height: 2px; background: #cbd5e1; margin: 48px 0 32px 0;">]

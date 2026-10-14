@@ -5,13 +5,21 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.restdocs.test.autoconfigure.AutoConfigureRestDocs;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.HttpHeaders;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import ru.ccfit.nsu.navigator.dataservice.config.TraceIdFilter;
+import ru.ccfit.nsu.navigator.dataservice.dto.DownloadFileResponse;
 import ru.ccfit.nsu.navigator.dataservice.dto.WorkFilesResponse;
+import ru.ccfit.nsu.navigator.dataservice.exception.InvalidFileTypeException;
 import ru.ccfit.nsu.navigator.dataservice.exception.WorkNotFoundException;
 import ru.ccfit.nsu.navigator.dataservice.service.WorkFilesService;
+
+import static org.springframework.restdocs.headers.HeaderDocumentation.headerWithName;
+import static org.springframework.restdocs.headers.HeaderDocumentation.responseHeaders;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
+
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.springframework.restdocs.request.RequestDocumentation.*;
@@ -129,4 +137,84 @@ class WorkControllerTest {
 				));
 	}
 
+	@Test
+	void downloadFile_shouldReturnFileContentAndHeader() throws Exception {
+		DownloadFileResponse fileResponse = new DownloadFileResponse(
+				"0914_0812.srv",
+				"test binary content".getBytes()
+		);
+		when(service.getFile(1L, "survey")).thenReturn(fileResponse);
+
+		mockMvc.perform(get("/api/works/{id}/files/{type}", 1L, "survey"))
+				.andExpect(status().isOk())
+				.andExpect(header().exists(HttpHeaders.CONTENT_DISPOSITION))
+				.andDo(document("work-files/download-file",
+						preprocessResponse(prettyPrint()),
+						endpoint(),
+						pathParameters(
+								parameterWithName("id").description("Уникальный ID работы"),
+								parameterWithName("type").description("Тип скачиваемого файла (`survey` (съёмка), `calculation` (проект) или `work` (выправка))")
+						)
+				));
+	}
+
+	@Test
+	void downloadFile_whenInvalidType_shouldReturn400() throws Exception {
+		when(service.getFile(1L, "invalid-type"))
+				.thenThrow(new InvalidFileTypeException("invalid-type"));
+
+		mockMvc.perform(get("/api/works/{id}/files/{type}", 1L, "invalid-type"))
+				.andExpect(status().isBadRequest())
+				.andExpect(jsonPath("$.status").value(400))
+				.andExpect(jsonPath("$.code").value("INVALID_FILE_TYPE"))
+				.andDo(document("work-files/download-file-invalid-type",
+						preprocessResponse(prettyPrint())
+				));
+	}
+
+	@Test
+	void downloadFile_whenNotFound_shouldReturn404() throws Exception {
+		when(service.getFile(999L, "survey"))
+				.thenThrow(new WorkNotFoundException(999L));
+
+		mockMvc.perform(get("/api/works/{id}/files/{type}", 999L, "survey"))
+				.andExpect(status().isNotFound())
+				.andExpect(jsonPath("$.status").value(404))
+				.andExpect(jsonPath("$.code").value("WORK_NOT_FOUND"))
+				.andDo(document("work-files/download-file-not-found",
+						preprocessResponse(prettyPrint())
+				));
+	}
+
+	@Test
+	void downloadWorkFiles_shouldReturnZipArchive() throws Exception {
+		byte[] mockZipContent = "mock zip binary content".getBytes();
+		when(service.getFilesArchive(1L)).thenReturn(mockZipContent);
+
+		mockMvc.perform(get("/api/works/{id}/files", 1L))
+				.andExpect(status().isOk())
+				.andExpect(header().string(HttpHeaders.CONTENT_TYPE, "application/zip"))
+				.andExpect(header().exists(HttpHeaders.CONTENT_DISPOSITION))
+				.andDo(document("work-files/download-archive",
+						preprocessResponse(prettyPrint()),
+						endpoint(),
+						pathParameters(
+								parameterWithName("id").description("Уникальный ID работы")
+						)
+				));
+	}
+
+	@Test
+	void downloadWorkFiles_whenNotFound_shouldReturn404() throws Exception {
+		when(service.getFilesArchive(999L))
+				.thenThrow(new WorkNotFoundException(999L));
+
+		mockMvc.perform(get("/api/works/{id}/files", 999L))
+				.andExpect(status().isNotFound())
+				.andExpect(jsonPath("$.status").value(404))
+				.andExpect(jsonPath("$.code").value("WORK_NOT_FOUND"))
+				.andDo(document("work-files/download-archive-not-found",
+						preprocessResponse(prettyPrint())
+				));
+	}
 }

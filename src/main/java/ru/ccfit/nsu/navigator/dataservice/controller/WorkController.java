@@ -57,10 +57,9 @@ public class WorkController {
     @Operation(summary = "Скачать 1 файл работы")
     @GetMapping("/{id}/files/{type}")
     public ResponseEntity<byte[]> downloadFile(
-            @Parameter(description = "ID работы")
             @PathVariable
             Long id,
-            @Parameter(description = "Тип файла", schema = @Schema(allowableValues = {"survey", "calculation", "work"}))
+            @Parameter(schema = @Schema(allowableValues = {"survey", "calculation", "work"}))
             @PathVariable
             String type
     ) {
