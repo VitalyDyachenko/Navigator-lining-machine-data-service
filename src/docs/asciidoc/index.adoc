@@ -1,0 +1,43 @@
+= Документация API
+:doctype: book
+:icons: font
+:source-highlighter: highlightjs
+:toc: left
+:toclevels: 2
+
+== Работа с файлами работ
+
+:op-title: Загрузить файлы работы
+:op-id: work-files/upload
+:op-note: Ограничения входных файлов: + \
+Максимальный размер 1 файла: 10 МБ + \
+Максимальный суммарный размер всех файлов: 30 МБ + \
+Сервер физически не принимает файлы большего размера и сбрасывает сетевое соединение. Фронтенд обязан проверять размер до отправки запроса.
+include::templates/endpoint.adoc[]
+
+:op-title: Получить информацию о файлах работы
+:op-id: work-files/get-info
+include::templates/endpoint.adoc[]
+==== Ошибки
+:err-title: Файлы работы не найдены
+:err-id: work-files/get-info-not-found
+include::templates/error.adoc[]
+
+:op-title: Скачать 1 файл работы
+:op-id: work-files/download-file
+include::templates/endpoint.adoc[]
+==== Ошибки
+:err-title: Неверный тип файла
+:err-id: work-files/download-file-invalid-type
+include::templates/error.adoc[]
+:err-title: Работа не найдена
+:err-id: work-files/download-file-not-found
+include::templates/error.adoc[]
+
+:op-title: Скачать все файлы работы (ZIP)
+:op-id: work-files/download-archive
+include::templates/endpoint.adoc[]
+==== Ошибки
+:err-title: Работа не найдена
+:err-id: work-files/download-archive-not-found
+include::templates/error.adoc[]

@@ -1,2 +1,15 @@
-Посмотреть API:
-http://localhost:8080/swagger-ui/index.html
+## Документация и тестирование API для фронтенда
+
+### Интерактивное тестирование (Swagger UI):
+* http://localhost:8080/swagger-ui/index.html *(требуется запущенный бэкенд)*
+
+### Полная спецификация и контракт API (Spring REST Docs):
+* http://localhost:8080/docs/index.html *(требуется запущенный бэкенд)*
+
+> **Примечание:** Самая актуальная версия документации формируется после прогона тестов с помощью команды:
+> ```bash
+> ./mvnw clean package
+> # или:
+> ./mvnw test asciidoctor:process-asciidoc
+> ```
+> Также офлайн-версия сохраняется в виде статического файла: `./target/generated-docs/index.html` (можно открыть напрямую в браузере без запуска сервера).

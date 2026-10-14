@@ -1,0 +1,2 @@
+===== {err-title}
+include::{snippets}/{err-id}/http-response.adoc[opts=optional]

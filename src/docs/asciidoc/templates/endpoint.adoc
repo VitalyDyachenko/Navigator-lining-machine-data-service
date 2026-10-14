@@ -1,0 +1,22 @@
+pass:[<hr style="border: 0; height: 2px; background: #cbd5e1; margin: 48px 0 32px 0;">]
+
+=== {op-title}
+
+include::{snippets}/{op-id}/endpoint.adoc[opts=optional]
+include::{snippets}/{op-id}/path-parameters.adoc[opts=optional]
+include::{snippets}/{op-id}/request-parts.adoc[opts=optional]
+include::{snippets}/{op-id}/request-fields.adoc[opts=optional]
+//include::{snippets}/{op-id}/request-body.adoc[opts=optional]
+
+ifdef::op-note[]
+[IMPORTANT]
+====
+{op-note}
+====
+:op-note!:
+endif::[]
+
+==== Успешный ответ
+include::{snippets}/{op-id}/http-response.adoc[opts=optional]
+include::{snippets}/{op-id}/response-headers.adoc[opts=optional]
+include::{snippets}/{op-id}/response-fields.adoc[opts=optional]

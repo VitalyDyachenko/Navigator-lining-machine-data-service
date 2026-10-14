@@ -2,13 +2,13 @@ package ru.ccfit.nsu.navigator.dataservice.service;
 
 
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.server.ResponseStatusException;
 import ru.ccfit.nsu.navigator.dataservice.dto.DownloadFileResponse;
-import ru.ccfit.nsu.navigator.dataservice.dto.WorkResponse;
+import ru.ccfit.nsu.navigator.dataservice.dto.WorkFilesResponse;
 import ru.ccfit.nsu.navigator.dataservice.entity.WorkFiles;
+import ru.ccfit.nsu.navigator.dataservice.exception.InvalidFileTypeException;
+import ru.ccfit.nsu.navigator.dataservice.exception.WorkNotFoundException;
 import ru.ccfit.nsu.navigator.dataservice.repository.WorkFilesRepository;
 
 import java.io.ByteArrayOutputStream;
@@ -44,14 +44,11 @@ public class WorkFilesService {
     }
 
     @Transactional(readOnly = true)
-    public WorkResponse getWorkInfo(Long id){
+    public WorkFilesResponse getWorkFilesInfo(Long id){
         WorkFiles files = repository.findById(id)
-                .orElseThrow(()-> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "Work not found"
-                ));
+                .orElseThrow(()-> new WorkNotFoundException(id));
 
-        return new WorkResponse(
+        return new WorkFilesResponse(
                 files.getId(),
                 files.getSurveyFilename(),
                 files.getCalculationFilename(),
@@ -62,10 +59,7 @@ public class WorkFilesService {
     @Transactional(readOnly = true)
     public DownloadFileResponse getFile(Long id, String type) {
         WorkFiles files = repository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "Work not found"
-                ));
+                .orElseThrow(() -> new WorkNotFoundException(id));
 
         return switch (type) {
             case "survey" -> new DownloadFileResponse(
@@ -80,20 +74,14 @@ public class WorkFilesService {
                     files.getWorkFilename(),
                     files.getWorkFile()
             );
-            default -> throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "Unknown file type"
-            );
+            default -> throw new InvalidFileTypeException(type);
         };
     }
 
     @Transactional(readOnly = true)
     public byte[] getFilesArchive(Long id) throws IOException {
         WorkFiles files = repository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "Work not found"
-                ));
+                .orElseThrow(() -> new WorkNotFoundException(id));
 
         ByteArrayOutputStream output = new ByteArrayOutputStream();
 
