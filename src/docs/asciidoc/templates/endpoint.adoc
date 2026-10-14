@@ -1,0 +1,20 @@
+=== {op-title}
+
+include::{snippets}/{op-id}/endpoint.adoc[opts=optional]
+include::{snippets}/{op-id}/path-parameters.adoc[opts=optional]
+include::{snippets}/{op-id}/request-parts.adoc[opts=optional]
+include::{snippets}/{op-id}/request-fields.adoc[opts=optional]
+//include::{snippets}/{op-id}/request-body.adoc[opts=optional]
+
+
+==== Успешный ответ
+include::{snippets}/{op-id}/http-response.adoc[opts=optional]
+include::{snippets}/{op-id}/response-fields.adoc[opts=optional]
+
+ifdef::op-error-id[]
+==== Ошибки
+===== {op-error-title}
+include::{snippets}/{op-error-id}/http-response.adoc[opts=optional]
+:op-error-id!:
+:op-error-title!:
+endif::[]

@@ -131,8 +131,8 @@ public class WorkController {
     ) throws IOException {
         byte[] archive = service.getFilesArchive(id);
 
-        return ResponseEntity.ok().
-                header(
+        return ResponseEntity.ok()
+                .header(
                         HttpHeaders.CONTENT_DISPOSITION,
                         ContentDisposition.attachment()
                                 .filename("work-" + id + ".zip")

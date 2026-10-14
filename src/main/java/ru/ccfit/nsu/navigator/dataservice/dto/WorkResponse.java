@@ -9,7 +9,7 @@ public record WorkResponse (
 		@Schema(description = "Имя загруженного файла съёмки")
 		String surveyFilename,
 		@Schema(description = "Имя загруженного файла проекта")
-		String calculateFilename,
+		String calculationFilename,
 		@Schema(description = "Имя загруженного файла выправки")
 		String workFilename
 )

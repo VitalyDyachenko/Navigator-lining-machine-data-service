@@ -3,17 +3,12 @@
 :icons: font
 :source-highlighter: highlightjs
 :toc: left
+:toclevels: 3
 
 == Работа с файлами
 
-=== Получить информацию о файле работы
-
-`GET /api/works/{id}`
-
-include::{snippets}/works/get-info/http-request.adoc[]
-include::{snippets}/works/get-info/path-parameters.adoc[]
-include::{snippets}/works/get-info/http-response.adoc[]
-
-=== Работа не найдена
-
-include::{snippets}/works/get-info-not-found/http-response.adoc[]
+:op-title: Получить информацию о файле работы
+:op-id: works/get-info
+:op-error-title: Работа не найдена
+:op-error-id: works/get-info-not-found
+include::templates/endpoint.adoc[]

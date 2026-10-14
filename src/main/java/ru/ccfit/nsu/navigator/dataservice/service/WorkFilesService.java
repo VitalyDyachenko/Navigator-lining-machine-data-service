@@ -61,7 +61,7 @@ public class WorkFilesService {
     @Transactional(readOnly = true)
     public DownloadFileResponse getFile(Long id, String type) {
         WorkFiles files = repository.findById(id)
-                .orElseThrow(() -> new WorkNotFoundException(id));;
+                .orElseThrow(() -> new WorkNotFoundException(id));
 
         return switch (type) {
             case "survey" -> new DownloadFileResponse(
