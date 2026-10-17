@@ -29,7 +29,7 @@ public class WorkFilesService {
             MultipartFile surveyFile,
             MultipartFile calculationFile,
             MultipartFile workFile
-    )throws IOException{
+    ) throws IOException {
         //TODO validation files
         WorkFiles workFiles = new WorkFiles(
                 surveyFile.getOriginalFilename(),
@@ -44,7 +44,7 @@ public class WorkFilesService {
     }
 
     @Transactional(readOnly = true)
-    public WorkFilesResponse getWorkFilesInfo(Long id){
+    public WorkFilesResponse getWorkFilesInfo(Long id) {
         WorkFiles files = repository.findById(id)
                 .orElseThrow(()-> new WorkNotFoundException(id));
 

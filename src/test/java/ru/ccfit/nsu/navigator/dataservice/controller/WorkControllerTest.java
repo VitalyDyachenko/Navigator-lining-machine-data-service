@@ -16,8 +16,6 @@ import ru.ccfit.nsu.navigator.dataservice.exception.InvalidFileTypeException;
 import ru.ccfit.nsu.navigator.dataservice.exception.WorkNotFoundException;
 import ru.ccfit.nsu.navigator.dataservice.service.WorkFilesService;
 
-import static org.springframework.restdocs.headers.HeaderDocumentation.headerWithName;
-import static org.springframework.restdocs.headers.HeaderDocumentation.responseHeaders;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 
 
@@ -53,12 +51,11 @@ class WorkControllerTest {
 
 	@Test
 	void getWorkFilesInfo_shouldReturnWorkFiles() throws Exception {
-		// TODO заменить пример на реальный с реальными расширениями
 		WorkFilesResponse response = new WorkFilesResponse(
 				1L,
-				"0914_0812.srv",
-				"0914_0812.dat",
-				"0914_0812.bin"
+				"#83000235.srv",
+				"#83000235.prm",
+				"#83000235.crm"
 		);
 		when(service.getWorkFilesInfo(eq(1L))).thenReturn(response);
 
@@ -96,22 +93,21 @@ class WorkControllerTest {
 
 	@Test
 	void uploadFiles_shouldSaveFilesAndReturnId() throws Exception {
-		// TODO заменить пример на реальный с реальными расширениями
 		MockMultipartFile surveyFile = new MockMultipartFile(
 				"surveyFile",
-				"0914_0812.srv",
+				"#83000235.srv",
 				"application/octet-stream",
 				"survey content".getBytes()
 		);
 		MockMultipartFile calculationFile = new MockMultipartFile(
 				"calculationFile",
-				"0914_0812.dat",
+				"#83000235.prm",
 				"application/octet-stream",
 				"calculation content".getBytes()
 		);
 		MockMultipartFile workFile = new MockMultipartFile(
 				"workFile",
-				"0914_0812.bin",
+				"#83000235.crm",
 				"application/octet-stream",
 				"work content".getBytes()
 		);
@@ -140,7 +136,7 @@ class WorkControllerTest {
 	@Test
 	void downloadFile_shouldReturnFileContentAndHeader() throws Exception {
 		DownloadFileResponse fileResponse = new DownloadFileResponse(
-				"0914_0812.srv",
+				"#83000235.srv",
 				"test binary content".getBytes()
 		);
 		when(service.getFile(1L, "survey")).thenReturn(fileResponse);
