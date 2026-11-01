@@ -36,7 +36,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.multipart;
 
 
-@WebMvcTest(WorkController.class)
+@WebMvcTest(WorkFilesController.class)
 @AutoConfigureRestDocs
 @Import(TraceIdFilter.class)
 class WorkControllerTest {
