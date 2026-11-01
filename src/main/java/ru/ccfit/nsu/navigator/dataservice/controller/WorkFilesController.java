@@ -3,10 +3,7 @@ package ru.ccfit.nsu.navigator.dataservice.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
@@ -26,10 +23,10 @@ import java.nio.charset.StandardCharsets;
 @RestController
 @RequestMapping("/api/works")
 @Tag(name = "Work Files", description = "Операции для загрузки и скачивания файлов работ")
-public class WorkController {
+public class WorkFilesController {
     private final WorkFilesService service;
 
-    public WorkController(WorkFilesService service) {
+    public WorkFilesController(WorkFilesService service) {
         this.service = service;
     }
 
