@@ -22,11 +22,11 @@ CREATE TABLE main_track
     id                BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     source_id         INTEGER NOT NULL,
 
-    direction_id      INTEGER NOT NULL REFERENCES direction (id),
+    direction_id      BIGINT NOT NULL REFERENCES direction (id),
 
     number            VARCHAR(7),
     gauge_width_id    SMALLINT,
-    main_track_id_osn INTEGER --TODO понять чеэто
+    main_track_source_id_osn INTEGER --TODO понять чеэто
 );
 
 --TODO NOT NULL
@@ -64,7 +64,15 @@ CREATE TABLE machine_type
     name VARCHAR(30) NOT NULL
 );
 
---TODO могут ли меняться геометрические параметры у машин
+INSERT INTO machine_type (id, name)
+VALUES
+    (0, 'Рихтовочная/Путеизмеритель'),
+    (1, 'ВПО'),
+    (2, 'ВПР'),
+    (3, 'ВПРС'),
+    (4, 'ДСП');
+
+-- TODO могут ли меняться геометрические параметры у машин
 
 CREATE TABLE machine
 (
