@@ -2,32 +2,16 @@ CREATE TABLE survey
 (
     work_id BIGINT PRIMARY KEY REFERENCES work (id),
 
-    machine_id BIGINT NOT NULL REFERENCES machine (id),
-    peregon_id BIGINT NOT NULL REFERENCES peregon (id),
-    main_track_id BIGINT NOT NULL REFERENCES main_track (id),
-
     version SMALLINT NOT NULL,
     survey_time TIMESTAMP,
 
-    track_number VARCHAR(7),
-    adm_code SMALLINT,
-
     channel_mask INTEGER NOT NULL,
-    step_size_mm INTEGER NOT NULL,
-    step_count BIGINT NOT NULL,
-
-    start_km SMALLINT,
-    start_m SMALLINT,
-    start_mm SMALLINT,
-
-    end_km SMALLINT,
-    end_m SMALLINT,
-    end_mm SMALLINT,
 
     -- =========== Flag
     against_picketage  BOOLEAN,
     moving_backward    BOOLEAN,
-    press              SMALLINT, --0-влево, 1-вправо, 3-по обоим ниткам
+    left_press         BOOLEAN,
+    right_press        BOOLEAN,
     short_chord        BOOLEAN,
     intertrack_space   SMALLINT,
     marker_at_front    BOOLEAN,
@@ -69,31 +53,6 @@ CREATE TABLE survey_machine_params
                 AND cardinality(trolley_arms_mm) = 4
             )
 );
-
-
-CREATE TABLE survey_station_position
-(
-    work_id BIGINT NOT NULL REFERENCES survey(work_id),
-
-    station_order SMALLINT NOT NULL CHECK (station_order IN (1, 2)),
-
-    station_id BIGINT NOT NULL REFERENCES station(id),
-
-    --Исходный OS_PRIZ_ID — признак оси раздельного пункта
-    axis_attribute_id SMALLINT,
-
-    axis_km SMALLINT,
-    axis_m SMALLINT,
-
-    start_km SMALLINT,
-    start_m SMALLINT,
-
-    end_km SMALLINT,
-    end_m SMALLINT,
-
-    PRIMARY KEY (work_id, station_order)
-);
-
 
 
 CREATE TABLE survey_fragment
@@ -323,24 +282,6 @@ CREATE TABLE survey_gabarit
 
     CONSTRAINT chk_gabarit_intertrack
         CHECK (intertrack_code BETWEEN 0 AND 3)
-);
-
-
-
-CREATE TABLE survey_geo_coord
-(
-    id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-
-    work_id BIGINT NOT NULL REFERENCES survey(work_id),
-
-    point_index INTEGER NOT NULL,
-
-    latitude DOUBLE PRECISION NOT NULL,
-    longitude DOUBLE PRECISION NOT NULL,
-    altitude DOUBLE PRECISION NOT NULL,
-
-    CONSTRAINT uq_survey_geo_point
-        UNIQUE (work_id, point_index)
 );
 
 

@@ -13,7 +13,7 @@ CREATE TABLE direction
 
     railway_id   BIGINT  NOT NULL REFERENCES railway (id),
     code         SMALLINT,
-    railway_code SMALLINT,
+    mag_code     SMALLINT,
     name         VARCHAR(50)
 );
 
@@ -41,6 +41,7 @@ CREATE TABLE station
     type_id       SMALLINT,
     name          VARCHAR(38)
 );
+
 
 CREATE TABLE peregon
 (
@@ -81,6 +82,7 @@ CREATE TABLE machine
     name   VARCHAR(24),
     type_id SMALLINT REFERENCES machine_type(id)
 );
+
 
 
 
