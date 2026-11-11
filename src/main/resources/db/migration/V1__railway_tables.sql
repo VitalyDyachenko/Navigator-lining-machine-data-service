@@ -13,7 +13,7 @@ CREATE TABLE direction
 
     railway_id   BIGINT  NOT NULL REFERENCES railway (id),
     code         SMALLINT,
-    railway_code SMALLINT, --TODO FK
+    railway_code SMALLINT,
     name         VARCHAR(50)
 );
 
@@ -26,7 +26,7 @@ CREATE TABLE main_track
 
     number            VARCHAR(7),
     gauge_width_id    SMALLINT,
-    main_track_source_id_osn INTEGER --TODO понять чеэто
+    main_track_source_id_osn INTEGER
 );
 
 --TODO NOT NULL

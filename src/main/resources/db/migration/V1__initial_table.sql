@@ -16,4 +16,3 @@ CREATE TABLE work_files
     work_filename        VARCHAR(255) NOT NULL,
     work_file            BYTEA        NOT NULL
 );
-);
