@@ -16,11 +16,11 @@ CREATE TABLE survey
     step_size_mm INTEGER NOT NULL,
     step_count BIGINT NOT NULL,
 
-    start_km INTEGER,
+    start_km SMALLINT,
     start_m SMALLINT,
     start_mm SMALLINT,
 
-    end_km INTEGER,
+    end_km SMALLINT,
     end_m SMALLINT,
     end_mm SMALLINT,
 
@@ -82,13 +82,13 @@ CREATE TABLE survey_station_position
     --Исходный OS_PRIZ_ID — признак оси раздельного пункта
     axis_attribute_id SMALLINT,
 
-    axis_km INTEGER,
+    axis_km SMALLINT,
     axis_m SMALLINT,
 
-    start_km INTEGER,
+    start_km SMALLINT,
     start_m SMALLINT,
 
-    end_km INTEGER,
+    end_km SMALLINT,
     end_m SMALLINT,
 
     PRIMARY KEY (work_id, station_order)
@@ -123,7 +123,7 @@ CREATE TABLE survey_post
     work_id BIGINT NOT NULL REFERENCES survey(work_id),
 
     step_index INTEGER NOT NULL,
-    kilometer_number INTEGER NOT NULL,
+    kilometer_number SMALLINT NOT NULL,
     is_passport BOOLEAN NOT NULL
 );
 
@@ -136,7 +136,7 @@ CREATE TABLE survey_switch
     work_id BIGINT NOT NULL REFERENCES survey(work_id),
 
     step_index INTEGER NOT NULL,
-    is_trail_direction BOOLEAN,
+    is_trail_direction BOOLEAN, -- NULL = undefined
     type SMALLINT,
     length_m INTEGER,
     switch_number VARCHAR(5),
@@ -184,10 +184,10 @@ CREATE TABLE survey_speed
     start_step_index INTEGER NOT NULL,
     end_step_index INTEGER NOT NULL,
 
-    start_km INTEGER NOT NULL,
+    start_km SMALLINT NOT NULL,
     start_picket SMALLINT NOT NULL,
 
-    end_km INTEGER NOT NULL,
+    end_km SMALLINT NOT NULL,
     end_picket SMALLINT NOT NULL,
 
     passenger_speed INTEGER NOT NULL,
@@ -297,7 +297,7 @@ CREATE TABLE survey_gabarit
     control_distance_m DOUBLE PRECISION,
     step_index INTEGER,
 
-    kilometer INTEGER,
+    kilometer SMALLINT,
     picket SMALLINT,
     meter REAL,
 
@@ -432,7 +432,7 @@ CREATE TABLE survey_rfid
     tag_identifier BIGINT NOT NULL,
     data_blocks BIGINT[] NOT NULL,
 
-    kilometer INTEGER NOT NULL,
+    kilometer SMALLINT NOT NULL,
     picket SMALLINT NOT NULL,
     marker_type_id SMALLINT REFERENCES marker_type(id),
 
