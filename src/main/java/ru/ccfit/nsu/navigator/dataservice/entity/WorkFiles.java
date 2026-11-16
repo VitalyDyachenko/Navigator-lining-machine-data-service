@@ -5,7 +5,7 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
 @Entity
-@Table (name = "original_files")
+@Table (name = "work_files")
 public class WorkFiles {
 
     @Id
