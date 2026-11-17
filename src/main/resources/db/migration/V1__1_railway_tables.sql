@@ -1,3 +1,4 @@
+-- railway.sql
 CREATE TABLE railway
 (
     id         BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -58,7 +59,6 @@ CREATE TABLE peregon
 );
 
 
-
 CREATE TABLE machine_type
 (
     id   SMALLINT PRIMARY KEY,
@@ -83,7 +83,42 @@ CREATE TABLE machine
     type_id SMALLINT REFERENCES machine_type(id)
 );
 
+CREATE TABLE machine_params
+(
+    id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    machine_id BIGINT NOT NULL REFERENCES machine (id),
 
+    continuous_correction BOOLEAN,
+    profile_enabled BOOLEAN,
+    plane_satellite BOOLEAN,
+    --Биты 0–1: закодированный параметр количества подбиваемых шпал
+    tamping_sleepers SMALLINT,
+
+    alignment_arms_mm INTEGER[] NOT NULL,
+    leveling_arms_mm INTEGER[] NOT NULL,
+    trolley_arms_mm INTEGER[] NOT NULL,
+    gauge_width_mm INTEGER NOT NULL,
+
+    CONSTRAINT chk_machine_arrays
+        CHECK (
+            cardinality(alignment_arms_mm) = 5
+                AND cardinality(leveling_arms_mm) = 5
+                AND cardinality(trolley_arms_mm) = 4
+            ),
+
+    CONSTRAINT uq_machine_params
+        UNIQUE (
+                machine_id,
+                continuous_correction,
+                profile_enabled,
+                plane_satellite,
+                tamping_sleepers,
+                alignment_arms_mm,
+                leveling_arms_mm,
+                trolley_arms_mm,
+                gauge_width_mm
+            )
+);
 
 
 

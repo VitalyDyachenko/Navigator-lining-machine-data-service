@@ -1,3 +1,4 @@
+-- work.sql
 CREATE TABLE work
 (
     id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -41,7 +42,7 @@ CREATE TABLE geo_coord
     longitude DOUBLE PRECISION NOT NULL,
     altitude DOUBLE PRECISION NOT NULL,
 
-    CONSTRAINT uq_survey_geo_point
+    CONSTRAINT uq_geo_point
         UNIQUE (work_id, point_index)
 );
 

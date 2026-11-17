@@ -1,3 +1,4 @@
+-- calculation.sql
 CREATE TABLE calculation
 (
     work_id BIGINT PRIMARY KEY REFERENCES work (id),
@@ -8,6 +9,8 @@ CREATE TABLE calculation
 
     channel_mask INTEGER NOT NULL,
     otvod_count INTEGER NOT NULL,
+
+    machine_params_id BIGINT NOT NULL REFERENCES machine_params (id),
 
     against_picketage BOOLEAN,
     moving_backward BOOLEAN,

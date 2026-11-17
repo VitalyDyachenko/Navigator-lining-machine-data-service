@@ -1,3 +1,4 @@
+-- survay.sql
 CREATE TABLE survey
 (
     work_id BIGINT PRIMARY KEY REFERENCES work (id),
@@ -7,7 +8,9 @@ CREATE TABLE survey
 
     channel_mask INTEGER NOT NULL,
 
-    -- =========== Flag
+    machine_params_id BIGINT NOT NULL REFERENCES machine_params (id),
+
+        -- =========== Flag
     against_picketage  BOOLEAN,
     moving_backward    BOOLEAN,
     left_press         BOOLEAN,
@@ -28,30 +31,6 @@ CREATE TABLE survey
     trip_check_code SMALLINT,
     trip_checked BOOLEAN
     -- ======================
-);
-
-
-CREATE TABLE survey_machine_params
-(
-    work_id BIGINT PRIMARY KEY REFERENCES survey (work_id),
-
-    continuous_correction BOOLEAN,
-    profile_enabled BOOLEAN,
-    plane_satellite BOOLEAN,
-    --Биты 0–1: закодированный параметр количества подбиваемых шпал
-    tamping_sleepers SMALLINT,
-
-    alignment_arms_mm INTEGER[] NOT NULL,
-    leveling_arms_mm INTEGER[] NOT NULL,
-    trolley_arms_mm INTEGER[] NOT NULL,
-    gauge_width_mm INTEGER NOT NULL,
-
-    CONSTRAINT chk_machine_arrays
-        CHECK (
-            cardinality(alignment_arms_mm) = 5
-                AND cardinality(leveling_arms_mm) = 5
-                AND cardinality(trolley_arms_mm) = 4
-            )
 );
 
 
