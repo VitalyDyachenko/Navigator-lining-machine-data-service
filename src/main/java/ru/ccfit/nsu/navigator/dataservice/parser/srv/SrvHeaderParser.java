@@ -11,6 +11,11 @@ import java.time.DateTimeException;
 import java.time.LocalDateTime;
 
 public class SrvHeaderParser {
+
+    //!!!!! ВАЖНО поддерживается пока только одна версия
+    private static final int SUPPORTED_VERSION = 0x0605;
+
+
     public SrvHeader parse(SrvBinaryReader reader){
         String signature = new String(reader.readBytes(6), StandardCharsets.US_ASCII);
         if (!signature.equals("NavSRV")){
@@ -20,6 +25,12 @@ public class SrvHeaderParser {
         }
 
         int version = reader.readUnsignedShort();
+        if (version != SUPPORTED_VERSION) {
+            throw new SrvParsingException(
+                    "Unsupported SRV version: 0x%04X".formatted(version)
+            );
+        }
+
 
         LocalDateTime surveyTime = parseTime(reader);
         SrvMachine machine = parseMachine(reader);

@@ -51,4 +51,8 @@ public final class SrvBinaryReader {
     public double readDouble() {
         return buffer.getDouble();
     }
+
+    public long readLong() {
+        return buffer.getLong();
+    }
 }

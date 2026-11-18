@@ -5,6 +5,7 @@ import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.SrvHeader;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.SrvMachine;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.SrvSurveyFlags;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.track.SrvTrack;
+import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.vpiH.SrvVpiHeader;
 
 import java.io.InputStream;
 import java.time.LocalDateTime;
@@ -126,5 +127,24 @@ class SrvHeaderParserTest {
 
 // Конец структуры tsTRACK.
         assertEquals(491, reader.position());
+
+        // tsVPI_H — информация о проезде и счётчики объектов.
+        SrvVpiHeader vpi = new SrvVpiHeaderParser().parse(reader);
+
+        assertEquals(59649L, vpi.startStep());
+        assertEquals(1L, vpi.fragmentCount());
+        assertEquals(8L, vpi.postCount());
+        assertEquals(2L, vpi.switchCount());
+        assertEquals(25L, vpi.defectCount());
+        assertEquals(11902L, vpi.geoCoordCount());
+
+        assertEquals(110, vpi.tripId().wagonNumber());
+        assertEquals(2025, vpi.tripId().year());
+        assertEquals(83, vpi.tripId().railwayCode());
+
+        assertArrayEquals(new long[5], vpi.reserved());
+
+// Конец tsVPI_H — 76 байт от смещения 491.
+        assertEquals(567, reader.position());
     }
 }
