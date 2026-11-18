@@ -47,4 +47,8 @@ public final class SrvBinaryReader {
     public int readInt() {
         return buffer.getInt();
     }
+
+    public double readDouble() {
+        return buffer.getDouble();
+    }
 }

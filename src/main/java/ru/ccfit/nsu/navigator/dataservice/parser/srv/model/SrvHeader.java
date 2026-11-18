@@ -2,7 +2,7 @@ package ru.ccfit.nsu.navigator.dataservice.parser.srv.model;
 
 import java.time.LocalDateTime;
 
-public record SrvHeaderPrefix(
+public record SrvHeader(
         String signature,
         int version,
         LocalDateTime surveyTime,

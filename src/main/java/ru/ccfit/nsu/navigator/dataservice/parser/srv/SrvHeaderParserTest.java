@@ -1,9 +1,10 @@
 package ru.ccfit.nsu.navigator.dataservice.parser.srv;
 
 import org.junit.jupiter.api.Test;
-import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.SrvHeaderPrefix;
+import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.SrvHeader;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.SrvMachine;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.SrvSurveyFlags;
+import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.track.SrvTrack;
 
 import java.io.InputStream;
 import java.time.LocalDateTime;
@@ -31,7 +32,7 @@ class SrvHeaderParserTest {
 
         SrvHeaderParser parser = new SrvHeaderParser();
 
-        SrvHeaderPrefix header = parser.parse(reader);
+        SrvHeader header = parser.parse(reader);
 
         assertEquals("NavSRV", header.signature());
         assertEquals(0x0605, header.version());
@@ -81,5 +82,49 @@ class SrvHeaderParserTest {
         assertEquals(58, header.rfidCount());
 
         assertEquals(85, reader.position());
+
+        // tsTRACK — описание железнодорожного участка съёмки.
+        SrvTrack track = new SrvTrackParser().parse(reader);
+
+// NPUT — номер пути съёмки.
+        assertEquals("1", track.trackNumber());
+
+// PKT_BEGIN — начальная координата.
+        assertEquals(3349, track.begin().km());
+        assertEquals(577, track.begin().meters());
+        assertEquals(0, track.begin().millimeters());
+
+// PKT_END — конечная координата.
+        assertEquals(3357, track.end().km());
+        assertEquals(33, track.end().meters());
+        assertEquals(0, track.end().millimeters());
+
+// DOR — железная дорога.
+        assertEquals("Западно-Сибирская", track.railway().name());
+        assertEquals((short) 83, track.railway().code());
+
+// UP — направление.
+        assertEquals("Новосибирск-Красноярск", track.direction().name());
+        assertEquals(840, track.direction().sourceId());
+
+// PUTGL — главный путь.
+        assertEquals(1235, track.mainTrack().sourceId());
+        assertEquals("1", track.mainTrack().number());
+
+// PEREG_MS — межстанционный перегон.
+        assertEquals("Иня-восточная-Мочище", track.peregon().name());
+        assertEquals(9.0, track.peregon().exploitationLength());
+
+// STAN1 и STAN2 — станции.
+        assertEquals(18929, track.station1().sourceId());
+        assertEquals(18931, track.station2().sourceId());
+
+// STANKM — позиция станции на главном пути.
+        assertEquals(1235, track.stationPosition1().mainTrackSourceId());
+        assertEquals(3348, track.stationPosition1().axisKm());
+        assertEquals(788, track.stationPosition1().axisM());
+
+// Конец структуры tsTRACK.
+        assertEquals(491, reader.position());
     }
 }

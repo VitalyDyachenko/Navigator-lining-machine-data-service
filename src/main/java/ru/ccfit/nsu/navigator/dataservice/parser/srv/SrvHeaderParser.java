@@ -1,7 +1,7 @@
 package ru.ccfit.nsu.navigator.dataservice.parser.srv;
 
 import ru.ccfit.nsu.navigator.dataservice.exception.SrvParsingException;
-import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.SrvHeaderPrefix;
+import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.SrvHeader;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.SrvMachine;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.SrvSurveyFlags;
 
@@ -11,7 +11,7 @@ import java.time.DateTimeException;
 import java.time.LocalDateTime;
 
 public class SrvHeaderParser {
-    public SrvHeaderPrefix parse(SrvBinaryReader reader){
+    public SrvHeader parse(SrvBinaryReader reader){
         String signature = new String(reader.readBytes(6), StandardCharsets.US_ASCII);
         if (!signature.equals("NavSRV")){
             throw new SrvParsingException(
@@ -32,7 +32,7 @@ public class SrvHeaderParser {
         int markerCount = reader.readUnsignedShort();
         int rfidCount = reader.readUnsignedShort();
 
-        return new SrvHeaderPrefix(
+        return new SrvHeader(
                 signature,
                 version,
                 surveyTime,
@@ -121,11 +121,6 @@ public class SrvHeaderParser {
 
         int tampingSleepers = rawType & 0b11; //Подбиваемых шпал
 
-        System.out.println("Machine type: " + machineType);
-        System.out.println("Continuous correction: " + continuousCorrection);
-        System.out.println("Profile enabled: " + profileEnabled);
-        System.out.println("Plane satellite: " + planeSatellite);
-        System.out.println("Tamping sleepers: " + tampingSleepers);
     }
     private SrvSurveyFlags parseFlags(SrvBinaryReader reader) {
         int raw = reader.readUnsignedShort();
