@@ -9,7 +9,6 @@ import org.hibernate.type.SqlTypes;
 public class WorkFiles {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(name = "survey_filename", nullable = false)
@@ -37,6 +36,7 @@ public class WorkFiles {
     }
 
     public WorkFiles(
+            Long id,
             String surveyFilename,
             byte[] surveyFile,
             String calculationFilename,
@@ -44,6 +44,7 @@ public class WorkFiles {
             String workFilename,
             byte[] workFile
     ) {
+        this.id = id;
         this.surveyFilename = surveyFilename;
         this.surveyFile = surveyFile;
         this.calculationFilename = calculationFilename;
