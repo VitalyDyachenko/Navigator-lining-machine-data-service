@@ -6,10 +6,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import ru.ccfit.nsu.navigator.dataservice.dto.DownloadFileResponse;
 import ru.ccfit.nsu.navigator.dataservice.dto.WorkFilesResponse;
+import ru.ccfit.nsu.navigator.dataservice.entity.Work;
 import ru.ccfit.nsu.navigator.dataservice.entity.WorkFiles;
 import ru.ccfit.nsu.navigator.dataservice.exception.InvalidFileTypeException;
 import ru.ccfit.nsu.navigator.dataservice.exception.WorkNotFoundException;
 import ru.ccfit.nsu.navigator.dataservice.repository.WorkFilesRepository;
+import ru.ccfit.nsu.navigator.dataservice.repository.WorkRepository;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -18,10 +20,15 @@ import java.util.zip.ZipOutputStream;
 
 @Service
 public class WorkFilesService {
-    private final WorkFilesRepository repository;
+    private final WorkFilesRepository filesRepository;
+    private final WorkRepository workRepository;
 
-    public WorkFilesService(WorkFilesRepository repository) {
-        this.repository = repository;
+    public WorkFilesService(
+            WorkFilesRepository filesRepository,
+            WorkRepository workRepository
+    ) {
+        this.filesRepository = filesRepository;
+        this.workRepository = workRepository;
     }
 
     @Transactional
@@ -30,22 +37,28 @@ public class WorkFilesService {
             MultipartFile calculationFile,
             MultipartFile workFile
     ) throws IOException {
-        //TODO validation files
-        WorkFiles workFiles = new WorkFiles(
+        byte[] surveyBytes = surveyFile.getBytes();
+        byte[] calculationBytes = calculationFile.getBytes();;
+        byte[] workFileBytes = workFile.getBytes();
+
+        Work work = workRepository.save(Work.createPending());
+
+        WorkFiles files = new WorkFiles(
+                work.getId(),
                 surveyFile.getOriginalFilename(),
-                surveyFile.getBytes(),
+                surveyBytes,
                 calculationFile.getOriginalFilename(),
-                calculationFile.getBytes(),
+                calculationBytes,
                 workFile.getOriginalFilename(),
-                workFile.getBytes()
+                workFileBytes
         );
 
-        return repository.save(workFiles).getId();
+        return filesRepository.save(files).getId();
     }
 
     @Transactional(readOnly = true)
     public WorkFilesResponse getWorkFilesInfo(Long id) {
-        WorkFiles files = repository.findById(id)
+        WorkFiles files = filesRepository.findById(id)
                 .orElseThrow(()-> new WorkNotFoundException(id));
 
         return new WorkFilesResponse(
@@ -58,7 +71,7 @@ public class WorkFilesService {
 
     @Transactional(readOnly = true)
     public DownloadFileResponse getFile(Long id, String type) {
-        WorkFiles files = repository.findById(id)
+        WorkFiles files = filesRepository.findById(id)
                 .orElseThrow(() -> new WorkNotFoundException(id));
 
         return switch (type) {
@@ -80,7 +93,7 @@ public class WorkFilesService {
 
     @Transactional(readOnly = true)
     public byte[] getFilesArchive(Long id) throws IOException {
-        WorkFiles files = repository.findById(id)
+        WorkFiles files = filesRepository.findById(id)
                 .orElseThrow(() -> new WorkNotFoundException(id));
 
         ByteArrayOutputStream output = new ByteArrayOutputStream();

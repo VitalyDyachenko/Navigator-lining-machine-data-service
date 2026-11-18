@@ -1,19 +1,28 @@
 -- work.sql
 CREATE TABLE work
 (
-    id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
 
-    machine_id BIGINT NOT NULL REFERENCES machine (id),
-    peregon_id BIGINT NOT NULL REFERENCES peregon (id),
-    main_track_id BIGINT NOT NULL REFERENCES main_track (id),
+    --TODO CHANGES BECAUSE WE NEED A PARSER FOR THAT
+    id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+--
+--     machine_id BIGINT NOT NULL REFERENCES machine (id),
+--     peregon_id BIGINT NOT NULL REFERENCES peregon (id),
+--     main_track_id BIGINT NOT NULL REFERENCES main_track (id),
+
+    machine_id BIGINT REFERENCES machine(id),
+    peregon_id BIGINT REFERENCES peregon(id),
+    main_track_id BIGINT REFERENCES main_track(id),
+
     track_number VARCHAR(7),
     adm_code SMALLINT,
 
     start_km SMALLINT, start_m SMALLINT, start_mm SMALLINT,
     end_km SMALLINT, end_m SMALLINT, end_mm SMALLINT,
 
-    step_size_mm INTEGER NOT NULL,
-    step_count BIGINT NOT NULL
+--     step_size_mm INTEGER NOT NULL,
+--     step_count BIGINT NOT NULL
+    step_size_mm INTEGER,
+    step_count BIGINT
 );
 
 CREATE TABLE work_files
