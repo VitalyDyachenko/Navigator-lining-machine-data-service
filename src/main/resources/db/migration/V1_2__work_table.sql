@@ -16,8 +16,8 @@ CREATE TABLE work
     track_number VARCHAR(7),
     adm_code SMALLINT,
 
-    start_km SMALLINT, start_m SMALLINT, start_mm SMALLINT,
-    end_km SMALLINT, end_m SMALLINT, end_mm SMALLINT,
+    start_km INTEGER, start_m SMALLINT, start_mm SMALLINT,
+    end_km INTEGER, end_m SMALLINT, end_mm SMALLINT,
 
 --     step_size_mm INTEGER NOT NULL,
 --     step_count BIGINT NOT NULL
@@ -66,13 +66,13 @@ CREATE TABLE station_position
     --Исходный OS_PRIZ_ID — признак оси раздельного пункта
     axis_attribute_id SMALLINT,
 
-    axis_km SMALLINT,
+    axis_km INTEGER,
     axis_m SMALLINT,
 
-    start_km SMALLINT,
+    start_km INTEGER,
     start_m SMALLINT,
 
-    end_km SMALLINT,
+    end_km INTEGER,
     end_m SMALLINT,
 
     PRIMARY KEY (work_id, station_order)

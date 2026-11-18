@@ -149,26 +149,25 @@ class SrvHeaderParserTest {
         assertEquals(567, reader.position());
 
 
-        // InfoCH[16] — метаданные всех измерительных каналов.
+        // InfoCH[16] — метаданные каналов.
         SrvChannelInfo[] channels = new SrvChannelInfoParser().parse(reader);
 
         assertEquals(16, channels.length);
 
-// Активные каналы по MaskCH.
-        for (int index : new int[]{0, 1, 2, 5, 6, 7}) {
+// Каналы, у которых заданы метаданные.
+        for (int index = 0; index <= 5; index++) {
             assertEquals(3, channels[index].valueType());
             assertEquals(1, channels[index].physicalType());
             assertEquals(10.0f, channels[index].scale());
         }
 
-// Неактивные каналы.
-        for (int index : new int[]{3, 4, 8, 9, 10, 11, 12, 13, 14, 15}) {
+// Каналы без заполненных метаданных.
+        for (int index = 6; index < 16; index++) {
             assertEquals(0, channels[index].valueType());
             assertEquals(0, channels[index].physicalType());
             assertEquals(0.0f, channels[index].scale());
         }
 
-// Конец InfoCH[16].
         assertEquals(663, reader.position());
     }
 }
