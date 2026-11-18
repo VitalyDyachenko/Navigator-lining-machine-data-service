@@ -55,4 +55,8 @@ public final class SrvBinaryReader {
     public long readLong() {
         return buffer.getLong();
     }
+
+    public float readFloat() {
+        return buffer.getFloat();
+    }
 }
