@@ -39,4 +39,12 @@ public final class SrvBinaryReader {
     public int position() {
         return buffer.position();
     }
+
+    public short readShort() {
+        return buffer.getShort();
+    }
+
+    public int readInt() {
+        return buffer.getInt();
+    }
 }
