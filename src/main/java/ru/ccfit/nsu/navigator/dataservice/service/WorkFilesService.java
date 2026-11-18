@@ -58,15 +58,8 @@ public class WorkFilesService {
 
     @Transactional(readOnly = true)
     public WorkFilesResponse getWorkFilesInfo(Long id) {
-        WorkFiles files = filesRepository.findById(id)
-                .orElseThrow(()-> new WorkNotFoundException(id));
-
-        return new WorkFilesResponse(
-                files.getId(),
-                files.getSurveyFilename(),
-                files.getCalculationFilename(),
-                files.getWorkFilename()
-        );
+        return filesRepository.findFilesInfoById(id)
+                .orElseThrow(() -> new WorkNotFoundException(id));
     }
 
     @Transactional(readOnly = true)
