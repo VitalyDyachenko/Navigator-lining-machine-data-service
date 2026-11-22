@@ -10,6 +10,10 @@ import ru.ccfit.nsu.navigator.dataservice.entity.Work;
 import ru.ccfit.nsu.navigator.dataservice.entity.WorkFiles;
 import ru.ccfit.nsu.navigator.dataservice.exception.InvalidFileTypeException;
 import ru.ccfit.nsu.navigator.dataservice.exception.WorkNotFoundException;
+import ru.ccfit.nsu.navigator.dataservice.parser.srv.SurveyParser;
+import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.SrvHeader;
+import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.SrvSurvey;
+import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.track.SrvTrack;
 import ru.ccfit.nsu.navigator.dataservice.repository.WorkFilesRepository;
 import ru.ccfit.nsu.navigator.dataservice.repository.WorkRepository;
 
@@ -31,18 +35,53 @@ public class WorkFilesService {
         this.workRepository = workRepository;
     }
 
+
     @Transactional
     public Long saveFiles(
             MultipartFile surveyFile,
             MultipartFile calculationFile,
             MultipartFile workFile
     ) throws IOException {
+
         byte[] surveyBytes = surveyFile.getBytes();
-        byte[] calculationBytes = calculationFile.getBytes();;
+        byte[] calculationBytes = calculationFile.getBytes();
         byte[] workFileBytes = workFile.getBytes();
 
-        Work work = workRepository.save(Work.createPending());
+        // Полностью разбираем файл съёмки перед сохранением.
+        SrvSurvey survey = new SurveyParser().parse(surveyBytes);
 
+        SrvHeader header = survey.header();
+        SrvTrack track = header.track();
+
+        // Создаём запись work.
+        Work work = Work.createPending();
+
+        // NPUT, ADM — номер пути и административный код.
+        work.setTrackInfo(
+                track.trackNumber(),
+                track.administrativeCode()
+        );
+
+        // Координаты начала и конца участка из tsTRACK.
+        work.setTrackRange(
+                track.begin().km(),
+                track.begin().meters(),
+                track.begin().millimeters(),
+
+                track.end().km(),
+                track.end().meters(),
+                track.end().millimeters()
+        );
+
+        // SizeSTEP, CntSTEP — параметры измерений.
+        work.setMeasurementInfo(
+                header.stepSizeMm(),
+                header.stepCount()
+        );
+
+        work = workRepository.save(work);
+
+        // Сохраняем оригинальные файлы без изменений.
         WorkFiles files = new WorkFiles(
                 work.getId(),
                 surveyFile.getOriginalFilename(),
@@ -53,8 +92,11 @@ public class WorkFilesService {
                 workFileBytes
         );
 
-        return filesRepository.save(files).getId();
+        filesRepository.save(files);
+
+        return work.getId();
     }
+
 
     @Transactional(readOnly = true)
     public WorkFilesResponse getWorkFilesInfo(Long id) {
