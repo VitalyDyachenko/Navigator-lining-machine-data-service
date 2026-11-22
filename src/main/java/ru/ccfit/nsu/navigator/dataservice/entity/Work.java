@@ -41,6 +41,14 @@ public class Work {
     @Column(name = "step_count")
     private Long stepCount;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "machine_id")
+    private Machine machine;
+
+    public void setMachine(Machine machine) {
+        this.machine = machine;
+    }
+
     protected Work() {
     }
 

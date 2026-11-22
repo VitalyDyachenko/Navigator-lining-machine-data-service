@@ -16,6 +16,14 @@ import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.SrvSurvey;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.track.SrvTrack;
 import ru.ccfit.nsu.navigator.dataservice.repository.WorkFilesRepository;
 import ru.ccfit.nsu.navigator.dataservice.repository.WorkRepository;
+import ru.ccfit.nsu.navigator.dataservice.entity.Machine;
+import ru.ccfit.nsu.navigator.dataservice.entity.MachineParams;
+
+import ru.ccfit.nsu.navigator.dataservice.repository.MachineRepository;
+import ru.ccfit.nsu.navigator.dataservice.repository.MachineParamsRepository;
+
+import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.SrvMachine;
+import ru.ccfit.nsu.navigator.dataservice.exception.SrvParsingException;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -26,76 +34,100 @@ import java.util.zip.ZipOutputStream;
 public class WorkFilesService {
     private final WorkFilesRepository filesRepository;
     private final WorkRepository workRepository;
+    private final MachineRepository machineRepository;
+    private final MachineParamsRepository machineParamsRepository;
 
     public WorkFilesService(
             WorkFilesRepository filesRepository,
-            WorkRepository workRepository
+            WorkRepository workRepository,
+            MachineRepository machineRepository,
+            MachineParamsRepository machineParamsRepository
     ) {
         this.filesRepository = filesRepository;
         this.workRepository = workRepository;
+        this.machineRepository = machineRepository;
+        this.machineParamsRepository = machineParamsRepository;
     }
 
 
-    @Transactional
-    public Long saveFiles(
-            MultipartFile surveyFile,
-            MultipartFile calculationFile,
-            MultipartFile workFile
-    ) throws IOException {
 
+    @Transactional
+    public Long saveFiles(MultipartFile surveyFile, MultipartFile calculationFile,
+                          MultipartFile workFile) throws IOException {
         byte[] surveyBytes = surveyFile.getBytes();
         byte[] calculationBytes = calculationFile.getBytes();
-        byte[] workFileBytes = workFile.getBytes();
+        byte[] workBytes = workFile.getBytes();
 
-        // Полностью разбираем файл съёмки перед сохранением.
         SrvSurvey survey = new SurveyParser().parse(surveyBytes);
+        SrvMachine sourceMachine = survey.header().machine();
 
-        SrvHeader header = survey.header();
-        SrvTrack track = header.track();
+        Machine machine = getOrCreateMachine(sourceMachine);
+        saveMachineParams(machine, sourceMachine);
 
-        // Создаём запись work.
-        Work work = Work.createPending();
+        Work work = saveWork(survey.header(), machine);
 
-        // NPUT, ADM — номер пути и административный код.
-        work.setTrackInfo(
-                track.trackNumber(),
-                track.administrativeCode()
-        );
-
-        // Координаты начала и конца участка из tsTRACK.
-        work.setTrackRange(
-                track.begin().km(),
-                track.begin().meters(),
-                track.begin().millimeters(),
-
-                track.end().km(),
-                track.end().meters(),
-                track.end().millimeters()
-        );
-
-        // SizeSTEP, CntSTEP — параметры измерений.
-        work.setMeasurementInfo(
-                header.stepSizeMm(),
-                header.stepCount()
-        );
-
-        work = workRepository.save(work);
-
-        // Сохраняем оригинальные файлы без изменений.
         WorkFiles files = new WorkFiles(
                 work.getId(),
-                surveyFile.getOriginalFilename(),
-                surveyBytes,
-                calculationFile.getOriginalFilename(),
-                calculationBytes,
-                workFile.getOriginalFilename(),
-                workFileBytes
+                surveyFile.getOriginalFilename(), surveyBytes,
+                calculationFile.getOriginalFilename(), calculationBytes,
+                workFile.getOriginalFilename(), workBytes
         );
-
         filesRepository.save(files);
 
         return work.getId();
     }
+
+    private Machine getOrCreateMachine(SrvMachine source) {
+        if (source.machineType() < 0 || source.machineType() > 4) {
+            throw new SrvParsingException("Unsupported machine type: " + source.machineType());
+        }
+
+        short typeId = (short) source.machineType();
+
+        return machineRepository.findFirstByNumberAndNameAndTypeId(
+                source.number(), source.name(), typeId
+        ).orElseGet(() -> machineRepository.save(
+                new Machine(source.number(), source.name(), typeId)
+        ));
+    }
+
+    private void saveMachineParams(Machine machine, SrvMachine source) {
+        MachineParams params = new MachineParams(
+                machine,
+                source.continuousCorrection(),
+                source.profileEnabled(),
+                source.planeSatellite(),
+                source.tampingSleepers(),
+                source.alignmentArms(),
+                source.levelingArms(),
+                source.trolleyArms(),
+                source.gaugeWidth()
+        );
+
+        boolean exists = machineParamsRepository.findAllByMachine_Id(machine.getId())
+                .stream()
+                .anyMatch(existing -> existing.hasSameSettings(params));
+
+        if (!exists) {
+            machineParamsRepository.save(params);
+        }
+    }
+
+    private Work saveWork(SrvHeader header, Machine machine) {
+        SrvTrack track = header.track();
+        Work work = Work.createPending();
+
+        work.setMachine(machine);
+        work.setTrackInfo(track.trackNumber(), track.administrativeCode());
+        work.setTrackRange(
+                track.begin().km(), track.begin().meters(), track.begin().millimeters(),
+                track.end().km(), track.end().meters(), track.end().millimeters()
+        );
+        work.setMeasurementInfo(header.stepSizeMm(), header.stepCount());
+
+        return workRepository.save(work);
+    }
+
 
 
     @Transactional(readOnly = true)
