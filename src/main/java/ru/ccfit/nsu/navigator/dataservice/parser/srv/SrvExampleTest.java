@@ -8,6 +8,7 @@ import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.SrvSurveyFlags;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.channelInfo.SrvChannelInfo;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.marker.SrvMarker;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.rfid.SrvRfid;
+import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.track.SrvDefect;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.track.SrvTrack;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.vpiD.*;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.vpiH.SrvVpiHeader;
@@ -532,6 +533,135 @@ class SrvExampleTest {
 // Конец tsUROV, начало tsCURVE.
         assertEquals(146222, reader.position());
 
+
+
+// ===== tsCURVE — параметры кривых пути =====
+
+// CntCURVE — количество точек параметров кривых.
+        List<SrvCurve> curves = vpiDataParser.parseCurves(
+                reader,
+                header.vpi().curveCount()
+        );
+
+        assertEquals(15, curves.size());
+
+// Первая точка.
+        SrvCurve firstCurve = curves.get(0);
+
+        assertEquals(1, firstCurve.stepIndex());
+        assertEquals(1520.0f, firstCurve.gaugeNormMm());
+        assertEquals(0.0f, firstCurve.wearMm());
+        assertEquals(0.0f, firstCurve.toleranceMm());
+
+// RI — в файле записан отрицательный ноль.
+        assertEquals(
+                Float.floatToRawIntBits(-0.0f),
+                Float.floatToRawIntBits(firstCurve.radiusM())
+        );
+
+// Точка с радиусом 638 метров.
+        SrvCurve positiveCurve = curves.get(2);
+
+        assertEquals(757, positiveCurve.stepIndex());
+        assertEquals(638.0f, positiveCurve.radiusM());
+        assertEquals(1520.0f, positiveCurve.gaugeNormMm());
+        assertEquals(2.0f, positiveCurve.wearMm());
+        assertEquals(0.0f, positiveCurve.toleranceMm());
+
+// Точка с отрицательным радиусом.
+        SrvCurve negativeCurve = curves.get(6);
+
+        assertEquals(5162, negativeCurve.stepIndex());
+        assertEquals(-1080.0f, negativeCurve.radiusM());
+        assertEquals(1520.0f, negativeCurve.gaugeNormMm());
+        assertEquals(2.0f, negativeCurve.wearMm());
+
+// Ещё одна точка с отрицательным радиусом.
+        SrvCurve anotherCurve = curves.get(10);
+
+        assertEquals(9204, anotherCurve.stepIndex());
+        assertEquals(-1250.0f, anotherCurve.radiusM());
+
+// Последняя точка.
+        SrvCurve lastCurve = curves.get(14);
+
+        assertEquals(11924, lastCurve.stepIndex());
+        assertEquals(1520.0f, lastCurve.gaugeNormMm());
+        assertEquals(0.0f, lastCurve.wearMm());
+        assertEquals(0.0f, lastCurve.toleranceMm());
+
+// 15 записей по 20 байт = 300 байт.
+// Следующий блок — tsDEFECT.
+        assertEquals(146522, reader.position());
+
+// ===== tsDEFECT — неисправности пути =====
+
+// CntDEFECT — количество неисправностей в заголовке.
+        List<SrvDefect> defects = vpiDataParser.parseDefects(
+                reader,
+                header.vpi().defectCount()
+        );
+
+        assertEquals(25, defects.size());
+
+// Первая неисправность — рихтовка по правому борту.
+        SrvDefect firstDefect = defects.get(0);
+
+        assertEquals(0, firstDefect.startStepIndex());
+        assertEquals(53, firstDefect.endStepIndex());
+        assertEquals(1, firstDefect.mask());
+        assertEquals(28.0f, firstDefect.valueMm());
+        assertEquals(3116, firstDefect.typeCode());
+
+        assertEquals(65535, firstDefect.passengerSpeed());
+        assertEquals(65535, firstDefect.freightSpeed());
+        assertEquals(65535, firstDefect.emptyTrainSpeed());
+
+        assertEquals(1, firstDefect.degree());
+        assertEquals("Р", firstDefect.label());
+
+// Вторая неисправность — рихтовка по левому борту.
+        SrvDefect secondDefect = defects.get(1);
+
+        assertEquals(37, secondDefect.startStepIndex());
+        assertEquals(64, secondDefect.endStepIndex());
+        assertEquals(1, secondDefect.mask());
+        assertEquals(21.0f, secondDefect.valueMm());
+        assertEquals(3117, secondDefect.typeCode());
+        assertEquals(2, secondDefect.degree());
+        assertEquals("Р", secondDefect.label());
+
+// Пятая неисправность — перекос.
+        SrvDefect fifthDefect = defects.get(4);
+
+        assertEquals(839, fifthDefect.startStepIndex());
+        assertEquals(870, fifthDefect.endStepIndex());
+        assertEquals(2, fifthDefect.mask());
+        assertEquals(10.0f, fifthDefect.valueMm());
+        assertEquals(3115, fifthDefect.typeCode());
+        assertEquals("П", fifthDefect.label());
+
+// Просадка по левому борту.
+        SrvDefect subsidence = defects.get(20);
+
+        assertEquals(11366, subsidence.startStepIndex());
+        assertEquals(11376, subsidence.endStepIndex());
+        assertEquals(4, subsidence.mask());
+        assertEquals(10.0f, subsidence.valueMm());
+        assertEquals(3119, subsidence.typeCode());
+        assertEquals("Пр", subsidence.label());
+
+// Последняя неисправность.
+        SrvDefect lastDefect = defects.get(24);
+
+        assertEquals(11891, lastDefect.startStepIndex());
+        assertEquals(11907, lastDefect.endStepIndex());
+        assertEquals(3115, lastDefect.typeCode());
+        assertEquals(9.0f, lastDefect.valueMm());
+        assertEquals(1, lastDefect.degree());
+
+// 25 неисправностей по 30 байт = 750 байт.
+        assertEquals(147272, reader.position());
 
     }
 }

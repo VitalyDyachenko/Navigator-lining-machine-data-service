@@ -2,6 +2,7 @@ package ru.ccfit.nsu.navigator.dataservice.parser.srv;
 
 import ru.ccfit.nsu.navigator.dataservice.exception.SrvParsingException;
 import ru.ccfit.nsu.navigator.dataservice.parser.SrvBinaryReader;
+import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.track.SrvDefect;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.vpiD.*;
 
 import java.nio.charset.Charset;
@@ -18,7 +19,8 @@ public class SrvVpiDataParser {
     private static final int SPEED_SIZE = 22;
     private static final int THREAD_SIZE = 8;
     private static final int ELEVATION_SIZE = 8;
-
+    private static final int CURVE_SIZE = 20;
+    private static final int DEFECT_SIZE = 30;
     public SrvFragment parseFragment(SrvBinaryReader reader, long fragmentCount)
     {
         // CntFRAG — количество фрагментов в файле.
@@ -318,5 +320,100 @@ public class SrvVpiDataParser {
         return elevations;
     }
 
+
+    public List<SrvCurve> parseCurves(
+            SrvBinaryReader reader,
+            long count
+    ) {
+        // CntCURVE — количество точек параметров кривых.
+        checkCount(reader, count, CURVE_SIZE);
+
+        List<SrvCurve> curves = new ArrayList<>();
+
+        for (long i = 0; i < count; i++) {
+            int stepIndex = reader.readInt();
+            // STP — индекс шага
+
+            float radiusM = reader.readFloat();
+            // RI — радиус кривой в метрах, 0 — прямая
+
+            float gaugeNormMm = reader.readFloat();
+            // SI — нормативная ширина колеи в мм
+
+            float wearMm = reader.readFloat();
+            // IZ — износ в мм
+
+            float toleranceMm = reader.readFloat();
+            // DP — допуск в мм
+
+            curves.add(new SrvCurve(
+                    stepIndex,
+                    radiusM,
+                    gaugeNormMm,
+                    wearMm,
+                    toleranceMm
+            ));
+        }
+
+        return curves;
+    }
+
+
+    public List<SrvDefect> parseDefects(
+            SrvBinaryReader reader,
+            long count
+    ) {
+        // CntDEFECT — количество неисправностей из tsVPI_H.
+        checkCount(reader, count, DEFECT_SIZE);
+
+        List<SrvDefect> defects = new ArrayList<>();
+
+        for (long i = 0; i < count; i++) {
+            int startStepIndex = reader.readInt();
+            // STP_BEG — начальный шаг неисправности
+
+            int endStepIndex = reader.readInt();
+            // STP_END — конечный шаг неисправности
+
+            int mask = reader.readUnsignedShort();
+            // Mask — принадлежность: план, уровень, профиль и др.
+
+            float valueMm = reader.readFloat();
+            // Value — величина отступления в мм
+
+            int typeCode = reader.readUnsignedShort();
+            // Type — код неисправности, например 3116
+
+            int passengerSpeed = reader.readUnsignedShort();
+            // VPass — ограничение скорости пассажирских поездов
+
+            int freightSpeed = reader.readUnsignedShort();
+            // VGruz — ограничение скорости грузовых поездов
+
+            int emptyTrainSpeed = reader.readUnsignedShort();
+            // VPorog — ограничение скорости порожних поездов
+
+            int degree = reader.readUnsignedByte();
+            // Degree — степень отклонения
+
+            String label = readString(reader, 7);
+            // Label[7] — обозначение неисправности в Windows-1251
+
+            defects.add(new SrvDefect(
+                    startStepIndex,
+                    endStepIndex,
+                    mask,
+                    valueMm,
+                    typeCode,
+                    passengerSpeed,
+                    freightSpeed,
+                    emptyTrainSpeed,
+                    degree,
+                    label
+            ));
+        }
+
+        return defects;
+    }
 
 }
