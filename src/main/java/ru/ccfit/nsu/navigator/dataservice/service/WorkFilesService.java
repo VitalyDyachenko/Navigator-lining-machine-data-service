@@ -1,26 +1,21 @@
 package ru.ccfit.nsu.navigator.dataservice.service;
 
-
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import ru.ccfit.nsu.navigator.dataservice.dto.DownloadFileResponse;
 import ru.ccfit.nsu.navigator.dataservice.dto.WorkFilesResponse;
-import ru.ccfit.nsu.navigator.dataservice.entity.Work;
-import ru.ccfit.nsu.navigator.dataservice.entity.WorkFiles;
+import ru.ccfit.nsu.navigator.dataservice.entity.*;
 import ru.ccfit.nsu.navigator.dataservice.exception.InvalidFileTypeException;
 import ru.ccfit.nsu.navigator.dataservice.exception.WorkNotFoundException;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.SurveyParser;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.SrvHeader;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.SrvSurvey;
+import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.SrvSurveyFlags;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.track.SrvTrack;
-import ru.ccfit.nsu.navigator.dataservice.repository.WorkFilesRepository;
-import ru.ccfit.nsu.navigator.dataservice.repository.WorkRepository;
-import ru.ccfit.nsu.navigator.dataservice.entity.Machine;
-import ru.ccfit.nsu.navigator.dataservice.entity.MachineParams;
-
-import ru.ccfit.nsu.navigator.dataservice.repository.MachineRepository;
-import ru.ccfit.nsu.navigator.dataservice.repository.MachineParamsRepository;
+import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.vpiH.SrvTripId;
+import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.vpiH.SrvVpiHeader;
+import ru.ccfit.nsu.navigator.dataservice.repository.*;
 
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.SrvMachine;
 import ru.ccfit.nsu.navigator.dataservice.exception.SrvParsingException;
@@ -36,17 +31,20 @@ public class WorkFilesService {
     private final WorkRepository workRepository;
     private final MachineRepository machineRepository;
     private final MachineParamsRepository machineParamsRepository;
+    private final SurveyRepository surveyRepository;
 
     public WorkFilesService(
             WorkFilesRepository filesRepository,
             WorkRepository workRepository,
             MachineRepository machineRepository,
-            MachineParamsRepository machineParamsRepository
+            MachineParamsRepository machineParamsRepository,
+            SurveyRepository surveyRepository
     ) {
         this.filesRepository = filesRepository;
         this.workRepository = workRepository;
         this.machineRepository = machineRepository;
         this.machineParamsRepository = machineParamsRepository;
+        this.surveyRepository = surveyRepository;
     }
 
 
@@ -62,9 +60,10 @@ public class WorkFilesService {
         SrvMachine sourceMachine = survey.header().machine();
 
         Machine machine = getOrCreateMachine(sourceMachine);
-        saveMachineParams(machine, sourceMachine);
+        MachineParams machineParams = getOrCreateMachineParams(machine, sourceMachine);
 
         Work work = saveWork(survey.header(), machine);
+        saveSurvey(work, machineParams, survey.header());
 
         WorkFiles files = new WorkFiles(
                 work.getId(),
@@ -91,7 +90,8 @@ public class WorkFilesService {
         ));
     }
 
-    private void saveMachineParams(Machine machine, SrvMachine source) {
+
+    private MachineParams getOrCreateMachineParams(Machine machine, SrvMachine source) {
         MachineParams params = new MachineParams(
                 machine,
                 source.continuousCorrection(),
@@ -104,14 +104,62 @@ public class WorkFilesService {
                 source.gaugeWidth()
         );
 
-        boolean exists = machineParamsRepository.findAllByMachine_Id(machine.getId())
+        return machineParamsRepository.findAllByMachine_Id(machine.getId())
                 .stream()
-                .anyMatch(existing -> existing.hasSameSettings(params));
-
-        if (!exists) {
-            machineParamsRepository.save(params);
-        }
+                .filter(existing -> existing.hasSameSettings(params))
+                .findFirst()
+                .orElseGet(() -> machineParamsRepository.save(params));
     }
+
+    private void saveSurvey(Work work, MachineParams machineParams, SrvHeader header) {
+        Survey survey = new Survey(
+                work.getId(),
+                machineParams,
+                (short) header.version(),
+                header.surveyTime(),
+                header.channelMask()
+        );
+
+        setSurveyFlags(survey, header.flags());
+        setSurveyTrip(survey, header.vpi());
+
+        surveyRepository.save(survey);
+    }
+
+    private void setSurveyFlags(Survey survey, SrvSurveyFlags flags) {
+        int press = flags.press();
+
+        if (press == 2) {
+            throw new SrvParsingException("Unsupported press value: " + press);
+        }
+
+        survey.setFlags(
+                flags.againstPicketage(),
+                flags.movingBackward(),
+                press == 0 || press == 3,
+                press == 1 || press == 3,
+                flags.shortChord(),
+                (short) flags.intertrackSpace(),
+                flags.markerAtFront(),
+                flags.dlsEnabled()
+        );
+    }
+
+    private void setSurveyTrip(Survey survey, SrvVpiHeader vpi) {
+        SrvTripId trip = vpi.tripId();
+
+        survey.setTrip(
+                vpi.startStep(),
+                trip.tripNumber(),
+                (short) trip.wagonNumber(),
+                (short) trip.year(),
+                (short) trip.month(),
+                (short) trip.railwayCode(),
+                (short) trip.checkCode(),
+                trip.checked()
+        );
+    }
+
 
     private Work saveWork(SrvHeader header, Machine machine) {
         SrvTrack track = header.track();
