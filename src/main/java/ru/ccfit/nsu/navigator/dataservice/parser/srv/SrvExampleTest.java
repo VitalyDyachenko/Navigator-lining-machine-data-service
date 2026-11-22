@@ -9,6 +9,8 @@ import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.channelInfo.SrvChanne
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.marker.SrvMarker;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.rfid.SrvRfid;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.track.SrvTrack;
+import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.vpiD.SrvFragment;
+import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.vpiD.SrvPost;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.vpiH.SrvVpiHeader;
 
 import java.io.InputStream;
@@ -25,8 +27,7 @@ class SrvExampleTest {
 
         byte[] data;
 
-        try (InputStream input = getClass().getResourceAsStream("/srv/ivm.srv"))
-        {
+        try (InputStream input = getClass().getResourceAsStream("/srv/ivm.srv")) {
             if (input == null) {
                 throw new IllegalStateException("Test file not found");
             }
@@ -268,5 +269,85 @@ class SrvExampleTest {
 
 // Конец RFID, начало tsVPI_D.
         assertEquals(145833, reader.position());
+
+        // Конец RFID, начало tsVPI_D.
+        assertEquals(145833, reader.position());
+
+        SrvVpiDataParser vpiDataParser = new SrvVpiDataParser();
+
+// ===== tsFRAG — фрагмент съёмки =====
+
+        // CntFRAG — по нашему правилу один фрагмент на съёмку.
+        assertEquals(1L, header.vpi().fragmentCount());
+
+        SrvFragment fragment = vpiDataParser.parseFragment(
+                reader,
+                header.vpi().fragmentCount()
+        );
+
+        // STP — начальный шаг фрагмента.
+        assertEquals(0, fragment.startStepIndex());
+
+        // KMN, MN — начальная координата.
+        assertEquals(3349, fragment.startKm());
+        assertEquals(577, fragment.startM());
+
+        // KMK, MK — конечная координата.
+        assertEquals(3357, fragment.endKm());
+        assertEquals(33, fragment.endM());
+
+        // Kod_napr — код направления или станции.
+        assertEquals(13803L, fragment.directionStationCode());
+
+        // Kod_park — код парка.
+        assertEquals(0, fragment.parkCode());
+
+        // Num_way — номер пути.
+        assertEquals("1", fragment.trackNumber());
+
+        // Hod — направление относительно пикетажа.
+        assertEquals(1, fragment.picketDirection());
+
+        // Name — название фрагмента.
+        assertEquals("Иня-восточная-Мочище", fragment.name());
+
+        // tsFRAG занимает 79 байт.
+        assertEquals(145912, reader.position());
+
+
+// ===== tsPOST — километровые столбы =====
+
+        // CntPOST — количество столбов из заголовка.
+        assertEquals(8L, header.vpi().postCount());
+
+        List<SrvPost> posts = vpiDataParser.parsePosts(
+                reader,
+                header.vpi().postCount()
+        );
+
+        assertEquals(8, posts.size());
+
+        // Первый километровый столб.
+        SrvPost firstPost = posts.get(0);
+
+        // STP — шаг расположения столба.
+        assertEquals(679, firstPost.stepIndex());
+
+        // Number — номер километра.
+        assertEquals(3350, firstPost.kilometerNumber());
+
+        // isPasp — сведения из паспортных данных.
+        assertTrue(firstPost.fromPassport());
+
+        // Последний километровый столб.
+        SrvPost lastPost = posts.get(7);
+
+        assertEquals(11871, lastPost.stepIndex());
+        assertEquals(3357, lastPost.kilometerNumber());
+        assertTrue(lastPost.fromPassport());
+
+        // 8 записей tsPOST по 9 байт = 72 байта.
+// Следом начинается tsSWITCH.
+        assertEquals(145984, reader.position());
     }
 }
