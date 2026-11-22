@@ -30,22 +30,6 @@ CREATE TABLE work_files
     work_file            BYTEA        NOT NULL
 );
 
-CREATE TABLE geo_coord
-(
-    id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-
-    work_id BIGINT NOT NULL REFERENCES work(id),
-
-    point_index INTEGER NOT NULL,
-
-    latitude DOUBLE PRECISION NOT NULL,
-    longitude DOUBLE PRECISION NOT NULL,
-    altitude DOUBLE PRECISION NOT NULL,
-
-    CONSTRAINT uq_geo_point
-        UNIQUE (work_id, point_index)
-);
-
 CREATE TABLE station_position
 (
     work_id BIGINT NOT NULL REFERENCES work(id),

@@ -9,6 +9,7 @@ import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.track.SrvDefect;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.vpiD.*;
 import ru.ccfit.nsu.navigator.dataservice.repository.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -23,7 +24,8 @@ public class SurveyVpiPersistenceService {
     private final SurveyElevationRepository elevationRepository;
     private final SurveyCurveRepository curveRepository;
     private final SurveyDefectRepository defectRepository;
-
+    private final SurveyGabaritRepository gabaritRepository;
+    private final GeoCoordinateRepository geoCoordinateRepository;
 
     public SurveyVpiPersistenceService(
             SurveyFragmentRepository fragmentRepository,
@@ -48,6 +50,7 @@ public class SurveyVpiPersistenceService {
     }
 
 
+
     public void save(Long workId, SrvVpiData vpi) {
         saveFragment(workId, vpi.fragment());
         savePosts(workId, vpi.posts());
@@ -58,7 +61,10 @@ public class SurveyVpiPersistenceService {
         saveElevations(workId, vpi.elevations());
         saveCurves(workId, vpi.curves());
         saveDefects(workId, vpi.defects());
+        saveGabarits(workId, vpi.gabarits());
+        saveGeoCoordinates(workId, vpi.geoCoordinates());
     }
+
 
     private void saveFragment(Long workId, SrvFragment source) {
         int direction = source.picketDirection();
@@ -213,6 +219,50 @@ public class SurveyVpiPersistenceService {
                 .toList();
 
         defectRepository.saveAll(defects);
+    }
+
+
+    private void saveGabarits(Long workId, List<SrvGabarit> source) {
+        List<SurveyGabarit> gabarits = source.stream()
+                .map(item -> new SurveyGabarit(
+                        workId,
+                        item.controlDistanceM(),
+                        item.stepIndex(),
+                        item.kilometer(),
+                        (short) item.picket(),
+                        item.meter(),
+                        (short) item.objectType(),
+                        (short) item.clearanceCode(),
+                        (short) item.intertrackCode(),
+                        item.leftDistanceMm(),
+                        item.rightDistanceMm(),
+                        item.heightMm(),
+                        item.leftRangeMm(),
+                        item.rightRangeMm(),
+                        item.description()
+                ))
+                .toList();
+
+        gabaritRepository.saveAll(gabarits);
+    }
+
+
+    private void saveGeoCoordinates(Long workId, List<SrvGeoCoordinate> source) {
+        List<GeoCoordinate> coordinates = new ArrayList<>(source.size());
+
+        for (int i = 0; i < source.size(); i++) {
+            SrvGeoCoordinate item = source.get(i);
+
+            coordinates.add(new GeoCoordinate(
+                    workId,
+                    i,
+                    item.latitude(),
+                    item.longitude(),
+                    item.altitude()
+            ));
+        }
+
+        geoCoordinateRepository.saveAll(coordinates);
     }
 
 }
