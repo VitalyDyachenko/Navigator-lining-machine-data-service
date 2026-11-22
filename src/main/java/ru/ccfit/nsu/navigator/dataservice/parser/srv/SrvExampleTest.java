@@ -7,6 +7,7 @@ import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.SrvMachine;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.SrvSurveyFlags;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.channelInfo.SrvChannelInfo;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.marker.SrvMarker;
+import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.rfid.SrvRfid;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.track.SrvTrack;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.vpiH.SrvVpiHeader;
 
@@ -18,8 +19,7 @@ import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class ExampleTestSrv {
-
+class SrvExampleTest {
     @Test
     void shouldParseHeader() throws Exception {
 
@@ -222,7 +222,7 @@ class ExampleTestSrv {
 
         assertEquals(1, markers.size());
 
-        SrvMarker marker = markers.get(0);
+        SrvMarker marker = markers.getFirst();
 
 // Type = 14 — стрелка, остряк.
         assertEquals(14, marker.type());
@@ -232,5 +232,41 @@ class ExampleTestSrv {
 
 // Начало следующего блока tsRFID.
         assertEquals(143861, reader.position());
+
+        // tsRFID — RFID-метки съёмки.
+        SrvRfidParser rfidParser = new SrvRfidParser();
+
+        List<SrvRfid> rfids = rfidParser.parse(reader, header.rfidCount());
+
+        assertEquals(58, rfids.size());
+
+// Первая RFID-метка из XLSX и ivm.srv.
+        SrvRfid first = rfids.get(0);
+
+        assertEquals(3349, first.kilometer());
+        assertEquals(9, first.picket());
+        assertEquals(0, first.markerType());
+
+        assertEquals(526L, first.syncPulseCount());
+        assertEquals(0xCD5595DCL, first.tagIdentifier());
+
+        assertArrayEquals(new long[]{0, 0, 0}, first.dataBlocks());
+
+        assertEquals(3, first.blockMask());
+        assertEquals(1, first.pointCount());
+        assertFalse(first.hasError());
+
+        assertEquals(328.75, first.controlDistanceM());
+
+// Последняя RFID-метка.
+        SrvRfid last = rfids.get(57);
+
+        assertEquals(3357, last.kilometer());
+        assertEquals(0, last.picket());
+        assertEquals(11873L, last.syncPulseCount());
+        assertEquals(7420.625, last.controlDistanceM());
+
+// Конец RFID, начало tsVPI_D.
+        assertEquals(145833, reader.position());
     }
 }
