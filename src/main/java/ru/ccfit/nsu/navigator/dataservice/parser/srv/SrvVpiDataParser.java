@@ -21,6 +21,9 @@ public class SrvVpiDataParser {
     private static final int ELEVATION_SIZE = 8;
     private static final int CURVE_SIZE = 20;
     private static final int DEFECT_SIZE = 30;
+    private static final int GABARIT_SIZE = 96;
+    private static final int GEO_COORD_SIZE = 24;
+
     public SrvFragment parseFragment(SrvBinaryReader reader, long fragmentCount)
     {
         // CntFRAG — количество фрагментов в файле.
@@ -415,5 +418,110 @@ public class SrvVpiDataParser {
 
         return defects;
     }
+
+
+    public List<SrvGabarit> parseGabarits(
+            SrvBinaryReader reader,
+            long count
+    ) {
+        // CntGABARIT — количество записей о габаритах.
+        checkCount(reader, count, GABARIT_SIZE);
+
+        List<SrvGabarit> gabarits = new ArrayList<>();
+
+        for (long i = 0; i < count; i++) {
+            double controlDistanceM = reader.readDouble();
+            // KRD — контрольное расстояние от начала участка, м
+
+            int stepIndex = reader.readInt();
+            // STP — индекс шага
+
+            // PKT — положение объекта, структура tsPKT_H.
+            long packedPosition = reader.readUnsignedInt();
+            // Piket:4, KM:24 — пикет и километр в одном числе
+
+            int picket = (int) (packedPosition & 0xF);
+            int kilometer = (int) ((packedPosition >>> 4) & 0xFFFFFF);
+
+            float meter = reader.readFloat();
+            // PKT.M — метры в пределах пикетажа
+
+            // Type:8, Reserv:4, Clearance:2, Intertrack:2.
+            int flags = reader.readUnsignedShort();
+
+            int objectType = flags & 0xFF;           // Type — тип объекта
+            int reservedFlags = (flags >>> 8) & 0xF; // Reserv — резерв
+            int clearanceCode = (flags >>> 12) & 0x3; // Clearance — габарит
+            int intertrackCode = (flags >>> 14) & 0x3; // Intertrack — междупутье
+
+            int leftDistanceMm = reader.readUnsignedShort();
+            // Distance[0] — расстояние до объекта слева, мм
+
+            int rightDistanceMm = reader.readUnsignedShort();
+            // Distance[1] — расстояние до объекта справа, мм
+
+            short heightMm = reader.readShort();
+            // Height — высота объекта, мм
+
+            short leftRangeMm = reader.readShort();
+            // Range[0] — допускаемое смещение пути влево, мм
+
+            short rightRangeMm = reader.readShort();
+            // Range[1] — допускаемое смещение пути вправо, мм
+
+            String description = readString(reader, 64);
+            // Label[64] — описание объекта, Windows-1251
+
+            gabarits.add(new SrvGabarit(
+                    controlDistanceM,
+                    stepIndex,
+                    kilometer,
+                    picket,
+                    meter,
+                    objectType,
+                    reservedFlags,
+                    clearanceCode,
+                    intertrackCode,
+                    leftDistanceMm,
+                    rightDistanceMm,
+                    heightMm,
+                    leftRangeMm,
+                    rightRangeMm,
+                    description
+            ));
+        }
+
+        return gabarits;
+    }
+
+    public List<SrvGeoCoordinate> parseGeoCoordinates(
+            SrvBinaryReader reader,
+            long count
+    ) {
+        // CntGeoCoords — количество GNSS-точек на оси пути.
+        checkCount(reader, count, GEO_COORD_SIZE);
+
+        List<SrvGeoCoordinate> coordinates = new ArrayList<>();
+
+        for (long i = 0; i < count; i++) {
+            double latitude = reader.readDouble();
+            // lat — географическая широта
+
+            double longitude = reader.readDouble();
+            // lon — географическая долгота
+
+            double altitude = reader.readDouble();
+            // alt — высота
+
+            coordinates.add(new SrvGeoCoordinate(
+                    latitude,
+                    longitude,
+                    altitude
+            ));
+        }
+
+        return coordinates;
+    }
+
 
 }

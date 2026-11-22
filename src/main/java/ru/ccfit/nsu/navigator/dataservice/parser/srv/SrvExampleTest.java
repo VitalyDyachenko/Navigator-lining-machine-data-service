@@ -663,5 +663,56 @@ class SrvExampleTest {
 // 25 неисправностей по 30 байт = 750 байт.
         assertEquals(147272, reader.position());
 
+
+// ===== tsGABARIT — габариты обустройства пути =====
+
+// CntGABARIT — в ivm.srv габаритов нет.
+        List<SrvGabarit> gabarits = vpiDataParser.parseGabarits(
+                reader,
+                header.vpi().gabaritCount()
+        );
+
+        assertTrue(gabarits.isEmpty());
+
+// Ничего не прочитано, позиция не изменилась.
+        assertEquals(147272, reader.position());
+
+
+// ===== tsGEO_COORD — GNSS-координаты оси пути =====
+
+        List<SrvGeoCoordinate> coordinates =
+                vpiDataParser.parseGeoCoordinates(
+                        reader,
+                        header.vpi().geoCoordCount()
+                );
+
+        assertEquals(11902, coordinates.size());
+
+// Первая точка, совпадает с XLSX.
+        SrvGeoCoordinate first_geo = coordinates.get(0);
+
+        assertEquals(55.11728140147731, first_geo.latitude());
+        assertEquals(83.00798073517092, first_geo.longitude());
+        assertEquals(0.0, first_geo.altitude());
+
+// Вторая точка.
+        SrvGeoCoordinate second = coordinates.get(1);
+
+        assertEquals(55.11728770953188, second.latitude());
+        assertEquals(83.0079863212119, second.longitude());
+        assertEquals(0.0, second.altitude());
+
+// Последняя точка из ivm.srv.
+        SrvGeoCoordinate last_geo = coordinates.get(11901);
+
+        assertEquals(55.152011147838394, last_geo.latitude());
+        assertEquals(83.10564274661138, last_geo.longitude());
+        assertEquals(0.0, last_geo.altitude());
+
+// 11902 записи по 24 байта.
+// Проверяем, что прочитали файл до конца.
+        assertEquals(432920, reader.position());
+        assertEquals(data.length, reader.position());
+
     }
 }
