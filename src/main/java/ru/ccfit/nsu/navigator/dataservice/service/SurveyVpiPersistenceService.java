@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import ru.ccfit.nsu.navigator.dataservice.entity.*;
 import ru.ccfit.nsu.navigator.dataservice.exception.SrvParsingException;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.SrvVpiData;
+import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.track.SrvDefect;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.vpiD.*;
 import ru.ccfit.nsu.navigator.dataservice.repository.*;
 
@@ -19,6 +20,10 @@ public class SurveyVpiPersistenceService {
     private final SurveyBuildRepository buildRepository;
     private final SurveySpeedRepository speedRepository;
     private final SurveyThreadRepository threadRepository;
+    private final SurveyElevationRepository elevationRepository;
+    private final SurveyCurveRepository curveRepository;
+    private final SurveyDefectRepository defectRepository;
+
 
     public SurveyVpiPersistenceService(
             SurveyFragmentRepository fragmentRepository,
@@ -26,7 +31,10 @@ public class SurveyVpiPersistenceService {
             SurveySwitchRepository switchRepository,
             SurveyBuildRepository buildRepository,
             SurveySpeedRepository speedRepository,
-            SurveyThreadRepository threadRepository)
+            SurveyThreadRepository threadRepository,
+            SurveyElevationRepository elevationRepository,
+            SurveyCurveRepository curveRepository,
+            SurveyDefectRepository defectRepository)
     {
         this.fragmentRepository = fragmentRepository;
         this.postRepository = postRepository;
@@ -34,7 +42,11 @@ public class SurveyVpiPersistenceService {
         this.buildRepository = buildRepository;
         this.speedRepository = speedRepository;
         this.threadRepository = threadRepository;
+        this.elevationRepository = elevationRepository;
+        this.curveRepository = curveRepository;
+        this.defectRepository = defectRepository;
     }
+
 
     public void save(Long workId, SrvVpiData vpi) {
         saveFragment(workId, vpi.fragment());
@@ -43,6 +55,9 @@ public class SurveyVpiPersistenceService {
         saveBuilds(workId, vpi.builds());
         saveSpeeds(workId, vpi.speeds());
         saveThreads(workId, vpi.threads());
+        saveElevations(workId, vpi.elevations());
+        saveCurves(workId, vpi.curves());
+        saveDefects(workId, vpi.defects());
     }
 
     private void saveFragment(Long workId, SrvFragment source) {
@@ -151,6 +166,53 @@ public class SurveyVpiPersistenceService {
                 .toList();
 
         threadRepository.saveAll(threads);
+    }
+
+    private void saveElevations(Long workId, List<SrvElevation> source) {
+        List<SurveyElevation> elevations = source.stream()
+                .map(item -> new SurveyElevation(
+                        workId,
+                        item.stepIndex(),
+                        item.valueMm()
+                ))
+                .toList();
+
+        elevationRepository.saveAll(elevations);
+    }
+
+    private void saveCurves(Long workId, List<SrvCurve> source) {
+        List<SurveyCurve> curves = source.stream()
+                .map(item -> new SurveyCurve(
+                        workId,
+                        item.stepIndex(),
+                        item.radiusM(),
+                        item.gaugeNormMm(),
+                        item.wearMm(),
+                        item.toleranceMm()
+                ))
+                .toList();
+
+        curveRepository.saveAll(curves);
+    }
+
+    private void saveDefects(Long workId, List<SrvDefect> source) {
+        List<SurveyDefect> defects = source.stream()
+                .map(item -> new SurveyDefect(
+                        workId,
+                        item.startStepIndex(),
+                        item.endStepIndex(),
+                        item.mask(),
+                        item.valueMm(),
+                        item.typeCode(),
+                        item.passengerSpeed(),
+                        item.freightSpeed(),
+                        item.emptyTrainSpeed(),
+                        (short) item.degree(),
+                        item.label()
+                ))
+                .toList();
+
+        defectRepository.saveAll(defects);
     }
 
 }
