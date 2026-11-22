@@ -10,11 +10,7 @@ import ru.ccfit.nsu.navigator.dataservice.exception.InvalidFileTypeException;
 import ru.ccfit.nsu.navigator.dataservice.exception.WorkNotFoundException;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.SurveyParser;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.SrvSurvey;
-import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.SrvSurveyFlags;
-import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.vpiH.SrvTripId;
-import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.vpiH.SrvVpiHeader;
 import ru.ccfit.nsu.navigator.dataservice.repository.*;
-import ru.ccfit.nsu.navigator.dataservice.exception.SrvParsingException;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;

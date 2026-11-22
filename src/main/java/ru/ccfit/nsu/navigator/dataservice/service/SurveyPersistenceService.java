@@ -16,15 +16,18 @@ public class SurveyPersistenceService {
     private final MachineParamsRepository machineParamsRepository;
     private final WorkRepository workRepository;
     private final SurveyRepository surveyRepository;
+    private final SurveyVpiPersistenceService vpiPersistenceService;
 
     public SurveyPersistenceService(MachineRepository machineRepository,
                                     MachineParamsRepository machineParamsRepository,
                                     WorkRepository workRepository,
-                                    SurveyRepository surveyRepository) {
+                                    SurveyRepository surveyRepository,
+                                    SurveyVpiPersistenceService vpiPersistenceService) {
         this.machineRepository = machineRepository;
         this.machineParamsRepository = machineParamsRepository;
         this.workRepository = workRepository;
         this.surveyRepository = surveyRepository;
+        this.vpiPersistenceService = vpiPersistenceService;
     }
 
     public Long save(SrvSurvey source) {
@@ -36,6 +39,8 @@ public class SurveyPersistenceService {
 
         Work work = saveWork(header, machine);
         saveSurvey(work, params, header);
+
+        vpiPersistenceService.save(work.getId(), source.vpiData());
 
         return work.getId();
     }
@@ -98,7 +103,7 @@ public class SurveyPersistenceService {
         setSurveyFlags(survey, header.flags());
         setSurveyTrip(survey, header.vpi());
 
-        surveyRepository.save(survey);
+        surveyRepository.saveAndFlush(survey);
     }
 
     private void setSurveyFlags(Survey survey, SrvSurveyFlags flags) {
