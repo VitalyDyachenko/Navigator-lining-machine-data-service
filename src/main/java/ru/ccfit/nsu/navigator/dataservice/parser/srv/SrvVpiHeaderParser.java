@@ -1,7 +1,7 @@
 
 package ru.ccfit.nsu.navigator.dataservice.parser.srv;
 
-import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.*;
+import ru.ccfit.nsu.navigator.dataservice.parser.SrvBinaryReader;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.vpiH.SrvTripId;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.vpiH.SrvVpiHeader;
 

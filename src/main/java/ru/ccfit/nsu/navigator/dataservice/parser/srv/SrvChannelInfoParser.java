@@ -1,5 +1,6 @@
 package ru.ccfit.nsu.navigator.dataservice.parser.srv;
 
+import ru.ccfit.nsu.navigator.dataservice.parser.SrvBinaryReader;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.channelInfo.SrvChannelInfo;
 
 public class SrvChannelInfoParser {

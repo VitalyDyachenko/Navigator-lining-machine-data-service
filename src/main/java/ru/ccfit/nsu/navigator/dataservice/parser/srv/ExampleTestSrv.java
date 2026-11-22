@@ -1,32 +1,36 @@
 package ru.ccfit.nsu.navigator.dataservice.parser.srv;
 
 import org.junit.jupiter.api.Test;
+import ru.ccfit.nsu.navigator.dataservice.parser.SrvBinaryReader;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.SrvHeader;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.SrvMachine;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.SrvSurveyFlags;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.channelInfo.SrvChannelInfo;
+import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.marker.SrvMarker;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.track.SrvTrack;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.vpiH.SrvVpiHeader;
 
 import java.io.InputStream;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class SrvHeaderParserTest {
+class ExampleTestSrv {
 
     @Test
     void shouldParseHeader() throws Exception {
 
         byte[] data;
 
-        try (InputStream input = getClass()
-                .getResourceAsStream("/srv/ivm.srv")) {
-
+        try (InputStream input = getClass().getResourceAsStream("/srv/ivm.srv"))
+        {
             if (input == null) {
                 throw new IllegalStateException("Test file not found");
             }
-
+            //TODO maybe to fix. readAllBytes need Integer not Long.
             data = input.readAllBytes();
         }
 
@@ -174,5 +178,59 @@ class SrvHeaderParserTest {
 
 // Предполагаемое начало блока измерений для ivm.srv версии 0x0605.
         assertEquals(768, reader.position());
+
+        SrvChannelDataParser channelDataParser = new SrvChannelDataParser();
+
+        Map<Integer, byte[]> data_ch = channelDataParser.parse(reader, header);
+
+// MaskCH — должны быть извлечены все шесть активных каналов.
+        assertEquals(Set.of(0, 1, 2, 5, 6, 7), data_ch.keySet());
+
+// CntSTEP × sizeof(short) — размер каждого канала.
+        for (byte[] channel : data_ch.values()) {
+            assertEquals(23848, channel.length);
+        }
+
+// Проверяем преобразование в числа.
+        short[] channel0 = channelDataParser.decodeShortValues(data_ch.get(0));
+
+        assertEquals(11924, channel0.length);
+        assertEquals(162, channel0[0]);
+        assertEquals(154, channel0[1]);
+        assertEquals(132, channel0[2]);
+
+// Канал 6 содержит данные, несмотря на Val = 0.
+        assertEquals(0, header.channels()[6].valueType());
+
+        short[] channel6 = channelDataParser.decodeShortValues(data_ch.get(6));
+
+        assertEquals(75, channel6[0]);
+        assertEquals(76, channel6[1]);
+        assertEquals(84, channel6[2]);
+
+// Следующий блок — tsMARKER.
+        assertEquals(143856, reader.position());
+
+
+        // tsMARKER — маркеры съёмки.
+        SrvMarkerParser markerParser = new SrvMarkerParser();
+
+        List<SrvMarker> markers = markerParser.parse(
+                reader,
+                header.markerCount()
+        );
+
+        assertEquals(1, markers.size());
+
+        SrvMarker marker = markers.get(0);
+
+// Type = 14 — стрелка, остряк.
+        assertEquals(14, marker.type());
+
+// iStep — индекс шага, на котором поставлен маркер.
+        assertEquals(11924L, marker.stepIndex());
+
+// Начало следующего блока tsRFID.
+        assertEquals(143861, reader.position());
     }
 }

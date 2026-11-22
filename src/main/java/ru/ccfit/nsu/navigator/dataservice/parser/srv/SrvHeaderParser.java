@@ -1,6 +1,7 @@
 package ru.ccfit.nsu.navigator.dataservice.parser.srv;
 
 import ru.ccfit.nsu.navigator.dataservice.exception.SrvParsingException;
+import ru.ccfit.nsu.navigator.dataservice.parser.SrvBinaryReader;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.SrvHeader;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.SrvMachine;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.SrvSurveyFlags;

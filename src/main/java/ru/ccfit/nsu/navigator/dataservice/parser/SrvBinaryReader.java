@@ -1,5 +1,5 @@
 
-package ru.ccfit.nsu.navigator.dataservice.parser.srv;
+package ru.ccfit.nsu.navigator.dataservice.parser;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
