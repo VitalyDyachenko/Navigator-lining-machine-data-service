@@ -9,14 +9,19 @@ CREATE TABLE railway
 
 CREATE TABLE direction
 (
-    id           BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    source_id    INTEGER NOT NULL,
+    id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    source_id INTEGER NOT NULL,
 
-    railway_id   BIGINT  NOT NULL REFERENCES railway (id),
-    code         SMALLINT,
-    mag_code     SMALLINT,
-    name         VARCHAR(50)
+    railway_id BIGINT NOT NULL REFERENCES railway(id),
+
+    code SMALLINT,
+    mag_code SMALLINT,
+    name VARCHAR(50),
+
+    start_station_source_id INTEGER,
+    end_station_source_id INTEGER
 );
+
 
 CREATE TABLE main_track
 (

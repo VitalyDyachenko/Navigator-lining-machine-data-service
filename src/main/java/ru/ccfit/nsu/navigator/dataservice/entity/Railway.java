@@ -14,10 +14,10 @@ public class Railway {
     @Column(name = "code", nullable = false, unique = true)
     private short code;
 
-    @Column(name = "name", nullable = false)
+    @Column(name = "name", nullable = false, length = 30)
     private String name;
 
-    @Column(name = "short_name")
+    @Column(name = "short_name", length = 6)
     private String shortName;
 
     protected Railway() {
