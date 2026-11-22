@@ -15,8 +15,9 @@ public class SrvVpiDataParser {
     private static final int BUILD_SIZE = 11;
     private static final int FRAGMENT_SIZE = 79;
     private static final int POST_SIZE = 9;
-
-    // CntFRAG — количество фрагментов из tsVPI_H.
+    private static final int SPEED_SIZE = 22;
+    private static final int THREAD_SIZE = 8;
+    private static final int ELEVATION_SIZE = 8;
 
     public SrvFragment parseFragment(SrvBinaryReader reader, long fragmentCount)
     {
@@ -208,6 +209,113 @@ public class SrvVpiDataParser {
         }
 
         return builds;
+    }
+
+
+    public List<SrvSpeed> parseSpeeds(
+            SrvBinaryReader reader,
+            long count
+    ) {
+        // CntSPEED — количество участков установленных скоростей.
+        checkCount(reader, count, SPEED_SIZE);
+
+        List<SrvSpeed> speeds = new ArrayList<>();
+
+        for (long i = 0; i < count; i++) {
+
+            int startStepIndex = reader.readInt();
+            // STP_BEG — индекс шага начала участка
+
+            int endStepIndex = reader.readInt();
+            // STP_END — индекс шага конца участка
+
+            long packedStart = reader.readUnsignedInt();
+            // Piket_BEG:4, KM_BEG:28 — упакованные координаты начала
+
+            long packedEnd = reader.readUnsignedInt();
+            // Piket_END:4, KM_END:28 — упакованные координаты конца
+
+            int startPicket = (int) (packedStart & 0xF);
+            int startKm = (int) (packedStart >>> 4);
+
+            int endPicket = (int) (packedEnd & 0xF);
+            int endKm = (int) (packedEnd >>> 4);
+
+            int passengerSpeed = reader.readUnsignedShort();
+            // VPass — максимальная скорость пассажирских поездов
+
+            int freightSpeed = reader.readUnsignedShort();
+            // VGruz — максимальная скорость грузовых поездов
+
+            int emptyTrainSpeed = reader.readUnsignedShort();
+            // VPorog — максимальная скорость порожних поездов
+
+            speeds.add(new SrvSpeed(
+                    startStepIndex,
+                    endStepIndex,
+                    startKm,
+                    startPicket,
+                    endKm,
+                    endPicket,
+                    passengerSpeed,
+                    freightSpeed,
+                    emptyTrainSpeed
+            ));
+        }
+
+        return speeds;
+    }
+
+
+    public List<SrvThread> parseThreads(
+            SrvBinaryReader reader,
+            long count
+    ) {
+        // CntTHREAD — количество участков левой рихтовочной нити.
+        checkCount(reader, count, THREAD_SIZE);
+
+        List<SrvThread> threads = new ArrayList<>();
+
+        for (long i = 0; i < count; i++) {
+            int startStepIndex = reader.readInt();
+            // STP_BEG — индекс шага начала участка
+
+            int endStepIndex = reader.readInt();
+            // STP_END — индекс шага конца участка
+
+            threads.add(new SrvThread(
+                    startStepIndex,
+                    endStepIndex
+            ));
+        }
+
+        return threads;
+    }
+
+
+    public List<SrvElevation> parseElevations(
+            SrvBinaryReader reader,
+            long count
+    ) {
+        // CntUROV — количество точек изменения возвышения.
+        checkCount(reader, count, ELEVATION_SIZE);
+
+        List<SrvElevation> elevations = new ArrayList<>();
+
+        for (long i = 0; i < count; i++) {
+            int stepIndex = reader.readInt();
+            // STP — индекс шага точки изменения возвышения
+
+            float valueMm = reader.readFloat();
+            // Value — возвышение в миллиметрах
+
+            elevations.add(new SrvElevation(
+                    stepIndex,
+                    valueMm
+            ));
+        }
+
+        return elevations;
     }
 
 

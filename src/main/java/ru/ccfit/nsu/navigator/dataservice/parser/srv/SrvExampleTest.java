@@ -9,10 +9,7 @@ import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.channelInfo.SrvChanne
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.marker.SrvMarker;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.rfid.SrvRfid;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.track.SrvTrack;
-import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.vpiD.SrvBuild;
-import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.vpiD.SrvFragment;
-import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.vpiD.SrvPost;
-import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.vpiD.SrvSwitch;
+import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.vpiD.*;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.vpiH.SrvVpiHeader;
 
 import java.io.InputStream;
@@ -413,6 +410,128 @@ class SrvExampleTest {
 // Два сооружения по 11 байт.
 // Дальше начинается tsSPEED.
         assertEquals(146042, reader.position());
+
+
+// ===== tsSPEED — установленные скорости =====
+
+// CntSPEED — количество участков из заголовка.
+        List<SrvSpeed> speeds = vpiDataParser.parseSpeeds(
+                reader,
+                header.vpi().speedCount()
+        );
+
+        assertEquals(2, speeds.size());
+
+// Первый участок.
+        SrvSpeed firstSpeed = speeds.get(0);
+
+        assertEquals(1, firstSpeed.startStepIndex());
+        assertEquals(202, firstSpeed.endStepIndex());
+
+        assertEquals(0, firstSpeed.startKm());
+        assertEquals(0, firstSpeed.startPicket());
+        assertEquals(0, firstSpeed.endKm());
+        assertEquals(0, firstSpeed.endPicket());
+
+        assertEquals(60, firstSpeed.passengerSpeed());
+        assertEquals(60, firstSpeed.freightSpeed());
+        assertEquals(60, firstSpeed.emptyTrainSpeed());
+
+// Второй участок.
+        SrvSpeed secondSpeed = speeds.get(1);
+
+        assertEquals(202, secondSpeed.startStepIndex());
+        assertEquals(11924, secondSpeed.endStepIndex());
+
+        assertEquals(0, secondSpeed.startKm());
+        assertEquals(0, secondSpeed.startPicket());
+        assertEquals(0, secondSpeed.endKm());
+        assertEquals(0, secondSpeed.endPicket());
+
+        assertEquals(100, secondSpeed.passengerSpeed());
+        assertEquals(80, secondSpeed.freightSpeed());
+        assertEquals(80, secondSpeed.emptyTrainSpeed());
+
+// 2 записи по 22 байта.
+// Следующий блок — tsTHREAD.
+        assertEquals(146086, reader.position());
+
+
+// ===== tsTHREAD — участки левой рихтовочной нити =====
+
+        List<SrvThread> threads = vpiDataParser.parseThreads(
+                reader,
+                header.vpi().threadCount()
+        );
+
+        assertEquals(2, threads.size());
+
+// Первый участок.
+        SrvThread firstThread = threads.get(0);
+
+        assertEquals(25, firstThread.startStepIndex());
+        assertEquals(606, firstThread.endStepIndex());
+
+// Второй участок.
+        SrvThread secondThread = threads.get(1);
+
+        assertEquals(1479, secondThread.startStepIndex());
+        assertEquals(11924, secondThread.endStepIndex());
+
+// Конец tsTHREAD, начало tsUROV.
+        assertEquals(146102, reader.position());
+
+
+// ===== tsUROV — точки возвышения =====
+
+        List<SrvElevation> elevations = vpiDataParser.parseElevations(
+                reader,
+                header.vpi().elevationCount()
+        );
+
+        assertEquals(15, elevations.size());
+
+// Первая точка.
+        SrvElevation firstElevation = elevations.get(0);
+
+        assertEquals(1, firstElevation.stepIndex());
+
+// В файле хранится именно отрицательный ноль.
+        assertEquals(
+                Float.floatToRawIntBits(-0.0f),
+                Float.floatToRawIntBits(firstElevation.valueMm())
+        );
+
+// Точка с возвышением +120 мм.
+        SrvElevation positiveElevation = elevations.get(2);
+
+        assertEquals(757, positiveElevation.stepIndex());
+        assertEquals(120.0f, positiveElevation.valueMm());
+
+// Точка с возвышением -60 мм.
+        SrvElevation negativeElevation = elevations.get(6);
+
+        assertEquals(5162, negativeElevation.stepIndex());
+        assertEquals(-60.0f, negativeElevation.valueMm());
+
+// Точка с возвышением -40 мм.
+        SrvElevation anotherElevation = elevations.get(10);
+
+        assertEquals(9204, anotherElevation.stepIndex());
+        assertEquals(-40.0f, anotherElevation.valueMm());
+
+// Последняя точка.
+        SrvElevation lastElevation = elevations.get(14);
+
+        assertEquals(11924, lastElevation.stepIndex());
+        assertEquals(
+                Float.floatToRawIntBits(-0.0f),
+                Float.floatToRawIntBits(lastElevation.valueMm())
+        );
+
+// Конец tsUROV, начало tsCURVE.
+        assertEquals(146222, reader.position());
+
 
     }
 }
