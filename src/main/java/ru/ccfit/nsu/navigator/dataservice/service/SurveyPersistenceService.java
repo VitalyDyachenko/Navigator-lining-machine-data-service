@@ -17,17 +17,22 @@ public class SurveyPersistenceService {
     private final WorkRepository workRepository;
     private final SurveyRepository surveyRepository;
     private final SurveyVpiPersistenceService vpiPersistenceService;
+    private final SurveyDataPersistenceService dataPersistenceService;
 
-    public SurveyPersistenceService(MachineRepository machineRepository,
-                                    MachineParamsRepository machineParamsRepository,
-                                    WorkRepository workRepository,
-                                    SurveyRepository surveyRepository,
-                                    SurveyVpiPersistenceService vpiPersistenceService) {
+    public SurveyPersistenceService(
+            MachineRepository machineRepository,
+            MachineParamsRepository machineParamsRepository,
+            WorkRepository workRepository,
+            SurveyRepository surveyRepository,
+            SurveyVpiPersistenceService vpiPersistenceService,
+            SurveyDataPersistenceService dataPersistenceService
+    ) {
         this.machineRepository = machineRepository;
         this.machineParamsRepository = machineParamsRepository;
         this.workRepository = workRepository;
         this.surveyRepository = surveyRepository;
         this.vpiPersistenceService = vpiPersistenceService;
+        this.dataPersistenceService = dataPersistenceService;
     }
 
     public Long save(SrvSurvey source) {
@@ -41,9 +46,11 @@ public class SurveyPersistenceService {
         saveSurvey(work, params, header);
 
         vpiPersistenceService.save(work.getId(), source.vpiData());
+        dataPersistenceService.save(work.getId(), source);
 
         return work.getId();
     }
+
 
     private Machine getOrCreateMachine(SrvMachine source) {
         if (source.machineType() < 0 || source.machineType() > 4) {

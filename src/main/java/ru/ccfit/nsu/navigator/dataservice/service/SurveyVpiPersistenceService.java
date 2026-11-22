@@ -36,7 +36,9 @@ public class SurveyVpiPersistenceService {
             SurveyThreadRepository threadRepository,
             SurveyElevationRepository elevationRepository,
             SurveyCurveRepository curveRepository,
-            SurveyDefectRepository defectRepository)
+            SurveyDefectRepository defectRepository,
+            SurveyGabaritRepository gabaritRepository,
+            GeoCoordinateRepository geoCoordinateRepository)
     {
         this.fragmentRepository = fragmentRepository;
         this.postRepository = postRepository;
@@ -47,6 +49,8 @@ public class SurveyVpiPersistenceService {
         this.elevationRepository = elevationRepository;
         this.curveRepository = curveRepository;
         this.defectRepository = defectRepository;
+        this.gabaritRepository = gabaritRepository;
+        this.geoCoordinateRepository = geoCoordinateRepository;
     }
 
 
