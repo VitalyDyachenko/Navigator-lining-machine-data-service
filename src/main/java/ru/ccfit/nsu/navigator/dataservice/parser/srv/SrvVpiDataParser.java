@@ -8,9 +8,11 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 
+
 public class SrvVpiDataParser {
     private static final Charset CP1251 =  Charset.forName("windows-1251");
-
+    private static final int SWITCH_SIZE = 18;
+    private static final int BUILD_SIZE = 11;
     private static final int FRAGMENT_SIZE = 79;
     private static final int POST_SIZE = 9;
 
@@ -117,4 +119,96 @@ public class SrvVpiDataParser {
 
         return new String(bytes, 0, end, CP1251).trim();
     }
+
+    public List<SrvSwitch> parseSwitches(
+            SrvBinaryReader reader,
+            long count
+    ) {
+        // CntSWITCH — количество стрелочных переводов.
+        checkCount(reader, count, SWITCH_SIZE);
+
+        List<SrvSwitch> switches = new ArrayList<>();
+
+        for (long i = 0; i < count; i++) {
+            int stepIndex = reader.readInt();
+            // STP — индекс шага, расположение стрелки
+
+            int direction = reader.readUnsignedByte();
+            // Napr — 0 неизвестно, 1 пошерстная, 2 противошерстная
+
+            int type = reader.readUnsignedByte();
+            // Type — тип стрелочного перевода (Switch_...)
+
+            int lengthM = reader.readUnsignedShort();
+            // LenR — реальная длина стрелки, м
+
+            String number = readString(reader, 5);
+            // Name[5] — номер стрелки
+
+            int stationCode = reader.readInt();
+            // stCode — код принадлежности с битом StanDecor
+
+            int passportFlag = reader.readUnsignedByte();
+            // isPasp — 1 паспортные, 0 фактические данные
+
+            if (passportFlag != 0 && passportFlag != 1) {
+                throw new SrvParsingException(
+                        "Invalid switch isPasp: " + passportFlag
+                );
+            }
+
+            switches.add(new SrvSwitch(
+                    stepIndex,
+                    direction,
+                    type,
+                    lengthM,
+                    number,
+                    stationCode,
+                    passportFlag == 1
+            ));
+        }
+
+        return switches;
+    }
+
+    public List<SrvBuild> parseBuilds(
+            SrvBinaryReader reader,
+            long count
+    ) {
+        // CntBUILD — количество сооружений.
+        checkCount(reader, count, BUILD_SIZE);
+
+        List<SrvBuild> builds = new ArrayList<>();
+
+        for (long i = 0; i < count; i++) {
+            int startStepIndex = reader.readInt();
+            // STP_BEG — индекс шага начала сооружения
+
+            int endStepIndex = reader.readInt();
+            // STP_END — индекс шага конца сооружения
+
+            short type = reader.readShort();
+            // Type — тип сооружения (BridgeTypeEnum)
+
+            int passportFlag = reader.readUnsignedByte();
+            // isPasp — источник данных о сооружении
+
+            if (passportFlag != 0 && passportFlag != 1) {
+                throw new SrvParsingException(
+                        "Invalid build isPasp: " + passportFlag
+                );
+            }
+
+            builds.add(new SrvBuild(
+                    startStepIndex,
+                    endStepIndex,
+                    type,
+                    passportFlag == 1
+            ));
+        }
+
+        return builds;
+    }
+
+
 }

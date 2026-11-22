@@ -9,8 +9,10 @@ import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.channelInfo.SrvChanne
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.marker.SrvMarker;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.rfid.SrvRfid;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.track.SrvTrack;
+import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.vpiD.SrvBuild;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.vpiD.SrvFragment;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.vpiD.SrvPost;
+import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.vpiD.SrvSwitch;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.vpiH.SrvVpiHeader;
 
 import java.io.InputStream;
@@ -349,5 +351,68 @@ class SrvExampleTest {
         // 8 записей tsPOST по 9 байт = 72 байта.
 // Следом начинается tsSWITCH.
         assertEquals(145984, reader.position());
+
+// ===== tsSWITCH — стрелочные переводы =====
+
+// CntSWITCH — количество стрелок в заголовке.
+        List<SrvSwitch> switches = vpiDataParser.parseSwitches(
+                reader,
+                header.vpi().switchCount()
+        );
+
+        assertEquals(2, switches.size());
+
+        SrvSwitch firstSwitch = switches.getFirst();
+
+        assertEquals(11924, firstSwitch.stepIndex());
+        assertEquals(1, firstSwitch.direction());
+        assertEquals(4, firstSwitch.type());
+        assertEquals(31, firstSwitch.lengthM());
+        assertEquals("2", firstSwitch.number());
+        assertEquals(1074593444, firstSwitch.stationCode());
+        assertTrue(firstSwitch.fromPassport());
+
+        SrvSwitch secondSwitch = switches.get(1);
+
+        assertEquals(11924, secondSwitch.stepIndex());
+        assertEquals(1, secondSwitch.direction());
+        assertEquals(4, secondSwitch.type());
+        assertEquals(31, secondSwitch.lengthM());
+        assertEquals("", secondSwitch.number());
+        assertEquals(0, secondSwitch.stationCode());
+        assertFalse(secondSwitch.fromPassport());
+
+// Две стрелки по 18 байт.
+        assertEquals(146020, reader.position());
+
+
+// ===== tsBUILD — сооружения =====
+
+// CntBUILD — количество сооружений в заголовке.
+        List<SrvBuild> builds = vpiDataParser.parseBuilds(
+                reader,
+                header.vpi().buildCount()
+        );
+
+        assertEquals(2, builds.size());
+
+        SrvBuild firstBuild = builds.getFirst();
+
+        assertEquals(294, firstBuild.startStepIndex());
+        assertEquals(311, firstBuild.endStepIndex());
+        assertEquals(5, firstBuild.type());
+        assertTrue(firstBuild.fromPassport());
+
+        SrvBuild secondBuild = builds.get(1);
+
+        assertEquals(11366, secondBuild.startStepIndex());
+        assertEquals(11383, secondBuild.endStepIndex());
+        assertEquals(5, secondBuild.type());
+        assertTrue(secondBuild.fromPassport());
+
+// Два сооружения по 11 байт.
+// Дальше начинается tsSPEED.
+        assertEquals(146042, reader.position());
+
     }
 }
