@@ -1,7 +1,5 @@
--- work.sql
 CREATE TABLE work
 (
-
     --TODO CHANGES BECAUSE WE NEED A PARSER FOR THAT
     id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     machine_id BIGINT NOT NULL REFERENCES machine (id),
@@ -16,8 +14,6 @@ CREATE TABLE work
 
     step_size_mm INTEGER NOT NULL,
     step_count BIGINT NOT NULL
-    step_size_mm INTEGER,
-    step_count BIGINT
 );
 
 CREATE TABLE work_files

@@ -61,7 +61,7 @@ CREATE TABLE survey_post
     work_id BIGINT NOT NULL REFERENCES survey(work_id),
 
     step_index INTEGER NOT NULL,
-    kilometer_number INTEGER NOT NULL
+    kilometer_number INTEGER NOT NULL,
     is_passport BOOLEAN NOT NULL
 );
 
@@ -122,10 +122,10 @@ CREATE TABLE survey_speed
     start_step_index INTEGER NOT NULL,
     end_step_index INTEGER NOT NULL,
 
-    start_km SMALLINT NOT NULL,
+    start_km INTEGER NOT NULL,
     start_picket SMALLINT NOT NULL,
 
-    end_km SMALLINT NOT NULL,
+    end_km INTEGER NOT NULL,
     end_picket SMALLINT NOT NULL,
 
     passenger_speed INTEGER NOT NULL,
