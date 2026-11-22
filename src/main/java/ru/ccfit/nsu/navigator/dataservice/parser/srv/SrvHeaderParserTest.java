@@ -36,6 +36,10 @@ class SrvHeaderParserTest {
 
         SrvHeader header = parser.parse(reader);
 
+        SrvTrack track = header.track();
+        SrvVpiHeader vpi = header.vpi();
+        SrvChannelInfo[] channels = header.channels();
+
         assertEquals("NavSRV", header.signature());
         assertEquals(0x0605, header.version());
         assertEquals(
@@ -83,11 +87,6 @@ class SrvHeaderParserTest {
         assertEquals(1, header.markerCount());
         assertEquals(58, header.rfidCount());
 
-        assertEquals(85, reader.position());
-
-        // tsTRACK — описание железнодорожного участка съёмки.
-        SrvTrack track = new SrvTrackParser().parse(reader);
-
 // NPUT — номер пути съёмки.
         assertEquals("1", track.trackNumber());
 
@@ -127,10 +126,8 @@ class SrvHeaderParserTest {
         assertEquals(788, track.stationPosition1().axisM());
 
 // Конец структуры tsTRACK.
-        assertEquals(491, reader.position());
 
         // tsVPI_H — информация о проезде и счётчики объектов.
-        SrvVpiHeader vpi = new SrvVpiHeaderParser().parse(reader);
 
         assertEquals(59649L, vpi.startStep());
         assertEquals(1L, vpi.fragmentCount());
@@ -146,11 +143,9 @@ class SrvHeaderParserTest {
         assertArrayEquals(new long[5], vpi.reserved());
 
 // Конец tsVPI_H — 76 байт от смещения 491.
-        assertEquals(567, reader.position());
 
 
         // InfoCH[16] — метаданные каналов.
-        SrvChannelInfo[] channels = new SrvChannelInfoParser().parse(reader);
 
         assertEquals(16, channels.length);
 
@@ -168,6 +163,16 @@ class SrvHeaderParserTest {
             assertEquals(0.0f, channels[index].scale());
         }
 
-        assertEquals(663, reader.position());
+        // Неописанная область заголовка: 105 байтов в ivm.srv.
+        assertEquals(105, header.undocumentedHeaderBytes().length);
+
+// Именно в нашем образце эта область заполнена нулями.
+        assertArrayEquals(
+                new byte[105],
+                header.undocumentedHeaderBytes()
+        );
+
+// Предполагаемое начало блока измерений для ivm.srv версии 0x0605.
+        assertEquals(768, reader.position());
     }
 }

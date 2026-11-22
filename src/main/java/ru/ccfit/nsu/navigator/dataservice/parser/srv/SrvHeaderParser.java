@@ -4,6 +4,9 @@ import ru.ccfit.nsu.navigator.dataservice.exception.SrvParsingException;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.SrvHeader;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.SrvMachine;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.SrvSurveyFlags;
+import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.channelInfo.SrvChannelInfo;
+import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.track.SrvTrack;
+import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.vpiH.SrvVpiHeader;
 
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -43,6 +46,21 @@ public class SrvHeaderParser {
         int markerCount = reader.readUnsignedShort();
         int rfidCount = reader.readUnsignedShort();
 
+        // Track — информация об участке пути, структура tsTRACK.
+        SrvTrack track = new SrvTrackParser().parse(reader);
+
+// VPI — информация о проезде и количествах объектов, tsVPI_H.
+        SrvVpiHeader vpi = new SrvVpiHeaderParser().parse(reader);
+
+// InfoCH[16] — метаданные 16 измерительных каналов.
+        SrvChannelInfo[] channels = new SrvChannelInfoParser().parse(reader);
+
+        //TODO ========================= WARNING!!!!!!!!!!!!!!!! ===============
+        // Неописанная часть заголовка: в исследованном файле 0x0605
+        // после InfoCH остаётся 105 байтов до начала измерений.
+        // Возможно, соответствует tsCDT_H; структура отсутствует в PDF.
+        byte[] undocumentedHeaderBytes = reader.readBytes(105);
+
         return new SrvHeader(
                 signature,
                 version,
@@ -53,7 +71,11 @@ public class SrvHeaderParser {
                 stepSizeMm,
                 stepCount,
                 markerCount,
-                rfidCount
+                rfidCount,
+                track,
+                vpi,
+                channels,
+                undocumentedHeaderBytes
         );
     }
 
