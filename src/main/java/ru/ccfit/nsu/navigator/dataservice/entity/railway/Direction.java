@@ -3,8 +3,6 @@ package ru.ccfit.nsu.navigator.dataservice.entity.railway;
 
 import jakarta.persistence.*;
 
-import java.util.Objects;
-
 @Entity
 @Table(name = "direction")
 public class Direction {
@@ -47,14 +45,6 @@ public class Direction {
         this.name = name;
         this.startStationSourceId = startStationSourceId;
         this.endStationSourceId = endStationSourceId;
-    }
-
-    public boolean hasSameData(Direction other) {
-        return code == other.code
-                && magCode == other.magCode
-                && startStationSourceId == other.startStationSourceId
-                && endStationSourceId == other.endStationSourceId
-                && Objects.equals(name, other.name);
     }
 
     public Long getId() {

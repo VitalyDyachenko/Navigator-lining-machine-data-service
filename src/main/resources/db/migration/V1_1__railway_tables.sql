@@ -19,8 +19,11 @@ CREATE TABLE direction
     name VARCHAR(50),
 
     start_station_source_id INTEGER,
-    end_station_source_id INTEGER
+    end_station_source_id INTEGER,
+
+    CONSTRAINT uq_direction_source UNIQUE (railway_id, source_id)
 );
+
 
 
 CREATE TABLE main_track
@@ -35,18 +38,21 @@ CREATE TABLE main_track
     main_track_source_id_osn INTEGER
 );
 
---TODO NOT NULL
 
 CREATE TABLE station
 (
-    id            BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    source_id     INTEGER NOT NULL,
-    code          INTEGER,
+    id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    source_id INTEGER NOT NULL,
+    code INTEGER,
     department_id INTEGER,
-    okato_id      INTEGER,
-    type_id       SMALLINT,
-    name          VARCHAR(38)
+    okato_id INTEGER,
+    type_id SMALLINT,
+    name VARCHAR(38),
+
+    CONSTRAINT uq_station_source UNIQUE (source_id)
+    --TODO возможно код станции уникален только относительно дороги, мб составной ключ
 );
+
 
 
 CREATE TABLE peregon

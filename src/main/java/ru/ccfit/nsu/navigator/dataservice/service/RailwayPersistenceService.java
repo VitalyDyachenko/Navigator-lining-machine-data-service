@@ -32,39 +32,33 @@ public class RailwayPersistenceService {
     }
 
     public Direction getOrCreateDirection(SrvDirection source, Railway railway) {
-        Direction direction = new Direction(
-                source.sourceId(),
-                railway,
-                source.code(),
-                source.magistralCode(),
-                source.name(),
-                source.startStationSourceId(),
-                source.endStationSourceId()
-        );
-
-        return directionRepository.findAllByRailway_IdAndSourceId(
-                        railway.getId(), source.sourceId()
+        return directionRepository.findByRailway_IdAndSourceId(
+                railway.getId(), source.sourceId()
+        ).orElseGet(() -> directionRepository.save(
+                new Direction(
+                        source.sourceId(),
+                        railway,
+                        source.code(),
+                        source.magistralCode(),
+                        source.name(),
+                        source.startStationSourceId(),
+                        source.endStationSourceId()
                 )
-                .stream()
-                .filter(existing -> existing.hasSameData(direction))
-                .findFirst()
-                .orElseGet(() -> directionRepository.save(direction));
+        ));
     }
 
     public Station getOrCreateStation(SrvStation source) {
-        Station station = new Station(
-                source.sourceId(),
-                source.code(),
-                source.departmentId(),
-                source.okatoId(),
-                source.typeId(),
-                source.name()
-        );
-
-        return stationRepository.findAllBySourceId(source.sourceId())
-                .stream()
-                .filter(existing -> existing.hasSameData(station))
-                .findFirst()
-                .orElseGet(() -> stationRepository.save(station));
+        return stationRepository.findBySourceId(source.sourceId())
+                .orElseGet(() -> stationRepository.save(
+                        new Station(
+                                source.sourceId(),
+                                source.code(),
+                                source.departmentId(),
+                                source.okatoId(),
+                                source.typeId(),
+                                source.name()
+                        )
+                ));
     }
+
 }

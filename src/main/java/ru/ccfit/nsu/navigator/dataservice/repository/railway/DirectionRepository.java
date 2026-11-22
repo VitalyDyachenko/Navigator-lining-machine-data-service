@@ -2,9 +2,9 @@ package ru.ccfit.nsu.navigator.dataservice.repository.railway;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import ru.ccfit.nsu.navigator.dataservice.entity.railway.Direction;
-import java.util.List;
+import java.util.Optional;
 
 public interface DirectionRepository extends JpaRepository<Direction, Long> {
 
-    List<Direction> findAllByRailway_IdAndSourceId(Long railwayId, int sourceId);
+    Optional<Direction> findByRailway_IdAndSourceId(Long railwayId, int sourceId);
 }
