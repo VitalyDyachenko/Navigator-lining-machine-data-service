@@ -22,19 +22,18 @@ import java.util.Set;
 import static org.junit.jupiter.api.Assertions.*;
 
 class SrvExampleTest {
+
+    //============================ В этом тесте разбирается пример irm.srv
     @Test
     void shouldParseHeader() throws Exception {
-
         byte[] data;
 
         try (InputStream input = getClass().getResourceAsStream("/srv/ivm.srv")) {
             if (input == null) {
                 throw new IllegalStateException("Test file not found");
             }
-            //TODO maybe to fix. readAllBytes need Integer not Long.
             data = input.readAllBytes();
         }
-
         SrvBinaryReader reader = new SrvBinaryReader(data);
 
         SrvHeaderParser parser = new SrvHeaderParser();
@@ -92,47 +91,45 @@ class SrvExampleTest {
         assertEquals(1, header.markerCount());
         assertEquals(58, header.rfidCount());
 
-// NPUT — номер пути съёмки.
+        // NPUT — номер пути съёмки.
         assertEquals("1", track.trackNumber());
 
-// PKT_BEGIN — начальная координата.
+        // PKT_BEGIN — начальная координата.
         assertEquals(3349, track.begin().km());
         assertEquals(577, track.begin().meters());
         assertEquals(0, track.begin().millimeters());
 
-// PKT_END — конечная координата.
+        // PKT_END — конечная координата.
         assertEquals(3357, track.end().km());
         assertEquals(33, track.end().meters());
         assertEquals(0, track.end().millimeters());
 
-// DOR — железная дорога.
+        // DOR — железная дорога.
         assertEquals("Западно-Сибирская", track.railway().name());
         assertEquals((short) 83, track.railway().code());
 
-// UP — направление.
+        // UP — направление.
         assertEquals("Новосибирск-Красноярск", track.direction().name());
         assertEquals(840, track.direction().sourceId());
 
-// PUTGL — главный путь.
+        // PUTGL — главный путь.
         assertEquals(1235, track.mainTrack().sourceId());
         assertEquals("1", track.mainTrack().number());
 
-// PEREG_MS — межстанционный перегон.
+        // PEREG_MS — межстанционный перегон.
         assertEquals("Иня-восточная-Мочище", track.peregon().name());
         assertEquals(9.0, track.peregon().exploitationLength());
 
-// STAN1 и STAN2 — станции.
+        // STAN1 и STAN2 — станции.
         assertEquals(18929, track.station1().sourceId());
         assertEquals(18931, track.station2().sourceId());
 
-// STANKM — позиция станции на главном пути.
+        // STANKM — позиция станции на главном пути.
         assertEquals(1235, track.stationPosition1().mainTrackSourceId());
         assertEquals(3348, track.stationPosition1().axisKm());
         assertEquals(788, track.stationPosition1().axisM());
 
-// Конец структуры tsTRACK.
-
-        // tsVPI_H — информация о проезде и счётчики объектов.
+        // ===== tsVPI_H — информация о проезде и счётчики объектов =====
 
         assertEquals(59649L, vpi.startStep());
         assertEquals(1L, vpi.fragmentCount());
@@ -147,52 +144,47 @@ class SrvExampleTest {
 
         assertArrayEquals(new long[5], vpi.reserved());
 
-// Конец tsVPI_H — 76 байт от смещения 491.
-
-
-        // InfoCH[16] — метаданные каналов.
+        // ===== InfoCH[16] — метаданные каналов =====
 
         assertEquals(16, channels.length);
 
-// Каналы, у которых заданы метаданные.
+        // Заполненные метаданные каналов.
         for (int index = 0; index <= 5; index++) {
             assertEquals(3, channels[index].valueType());
             assertEquals(1, channels[index].physicalType());
             assertEquals(10.0f, channels[index].scale());
         }
 
-// Каналы без заполненных метаданных.
+        // Каналы без заполненных метаданных.
         for (int index = 6; index < 16; index++) {
             assertEquals(0, channels[index].valueType());
             assertEquals(0, channels[index].physicalType());
             assertEquals(0.0f, channels[index].scale());
         }
 
-        // Неописанная область заголовка: 105 байтов в ivm.srv.
+        // Неописанная область заголовка в ivm.srv заполнена нулями.
         assertEquals(105, header.undocumentedHeaderBytes().length);
 
-// Именно в нашем образце эта область заполнена нулями.
         assertArrayEquals(
                 new byte[105],
                 header.undocumentedHeaderBytes()
         );
 
-// Предполагаемое начало блока измерений для ivm.srv версии 0x0605.
+        // Начало блока измерений в ivm.srv версии 0x0605.
         assertEquals(768, reader.position());
 
         SrvChannelDataParser channelDataParser = new SrvChannelDataParser();
 
         Map<Integer, byte[]> data_ch = channelDataParser.parse(reader, header);
 
-// MaskCH — должны быть извлечены все шесть активных каналов.
+        // MaskCH задаёт шесть активных каналов.
         assertEquals(Set.of(0, 1, 2, 5, 6, 7), data_ch.keySet());
 
-// CntSTEP × sizeof(short) — размер каждого канала.
+        // Размер канала: CntSTEP × sizeof(short).
         for (byte[] channel : data_ch.values()) {
             assertEquals(23848, channel.length);
         }
 
-// Проверяем преобразование в числа.
         short[] channel0 = channelDataParser.decodeShortValues(data_ch.get(0));
 
         assertEquals(11924, channel0.length);
@@ -200,7 +192,7 @@ class SrvExampleTest {
         assertEquals(154, channel0[1]);
         assertEquals(132, channel0[2]);
 
-// Канал 6 содержит данные, несмотря на Val = 0.
+        // Канал 6 содержит данные, несмотря на Val = 0.
         assertEquals(0, header.channels()[6].valueType());
 
         short[] channel6 = channelDataParser.decodeShortValues(data_ch.get(6));
@@ -209,11 +201,10 @@ class SrvExampleTest {
         assertEquals(76, channel6[1]);
         assertEquals(84, channel6[2]);
 
-// Следующий блок — tsMARKER.
+        // Следующий блок — tsMARKER.
         assertEquals(143856, reader.position());
 
-
-        // tsMARKER — маркеры съёмки.
+        // ===== tsMARKER — маркеры съёмки =====
         SrvMarkerParser markerParser = new SrvMarkerParser();
 
         List<SrvMarker> markers = markerParser.parse(
@@ -225,23 +216,23 @@ class SrvExampleTest {
 
         SrvMarker marker = markers.getFirst();
 
-// Type = 14 — стрелка, остряк.
+        // Type = 14 — стрелка, остряк.
         assertEquals(14, marker.type());
 
-// iStep — индекс шага, на котором поставлен маркер.
+        // iStep — индекс шага, на котором поставлен маркер.
         assertEquals(11924L, marker.stepIndex());
 
-// Начало следующего блока tsRFID.
+        // Начало следующего блока tsRFID.
         assertEquals(143861, reader.position());
 
-        // tsRFID — RFID-метки съёмки.
+        // ===== tsRFID — RFID-метки съёмки =====
         SrvRfidParser rfidParser = new SrvRfidParser();
 
         List<SrvRfid> rfids = rfidParser.parse(reader, header.rfidCount());
 
         assertEquals(58, rfids.size());
 
-// Первая RFID-метка из XLSX и ivm.srv.
+        // Первая RFID-метка.
         SrvRfid first = rfids.get(0);
 
         assertEquals(3349, first.kilometer());
@@ -259,7 +250,6 @@ class SrvExampleTest {
 
         assertEquals(328.75, first.controlDistanceM());
 
-// Последняя RFID-метка.
         SrvRfid last = rfids.get(57);
 
         assertEquals(3357, last.kilometer());
@@ -267,17 +257,15 @@ class SrvExampleTest {
         assertEquals(11873L, last.syncPulseCount());
         assertEquals(7420.625, last.controlDistanceM());
 
-// Конец RFID, начало tsVPI_D.
         assertEquals(145833, reader.position());
 
-        // Конец RFID, начало tsVPI_D.
         assertEquals(145833, reader.position());
 
         SrvVpiDataParser vpiDataParser = new SrvVpiDataParser();
 
-// ===== tsFRAG — фрагмент съёмки =====
+        // ===== tsFRAG — фрагмент съёмки =====
 
-        // CntFRAG — по нашему правилу один фрагмент на съёмку.
+        // В ivm.srv один фрагмент съёмки.
         assertEquals(1L, header.vpi().fragmentCount());
 
         SrvFragment fragment = vpiDataParser.parseFragment(
@@ -311,11 +299,9 @@ class SrvExampleTest {
         // Name — название фрагмента.
         assertEquals("Иня-восточная-Мочище", fragment.name());
 
-        // tsFRAG занимает 79 байт.
         assertEquals(145912, reader.position());
 
-
-// ===== tsPOST — километровые столбы =====
+        // ===== tsPOST — километровые столбы =====
 
         // CntPOST — количество столбов из заголовка.
         assertEquals(8L, header.vpi().postCount());
@@ -346,13 +332,10 @@ class SrvExampleTest {
         assertEquals(3357, lastPost.kilometerNumber());
         assertTrue(lastPost.fromPassport());
 
-        // 8 записей tsPOST по 9 байт = 72 байта.
-// Следом начинается tsSWITCH.
         assertEquals(145984, reader.position());
 
-// ===== tsSWITCH — стрелочные переводы =====
+        // ===== tsSWITCH — стрелочные переводы =====
 
-// CntSWITCH — количество стрелок в заголовке.
         List<SrvSwitch> switches = vpiDataParser.parseSwitches(
                 reader,
                 header.vpi().switchCount()
@@ -380,13 +363,10 @@ class SrvExampleTest {
         assertEquals(0, secondSwitch.stationCode());
         assertFalse(secondSwitch.fromPassport());
 
-// Две стрелки по 18 байт.
         assertEquals(146020, reader.position());
 
+        // ===== tsBUILD — сооружения =====
 
-// ===== tsBUILD — сооружения =====
-
-// CntBUILD — количество сооружений в заголовке.
         List<SrvBuild> builds = vpiDataParser.parseBuilds(
                 reader,
                 header.vpi().buildCount()
@@ -408,14 +388,10 @@ class SrvExampleTest {
         assertEquals(5, secondBuild.type());
         assertTrue(secondBuild.fromPassport());
 
-// Два сооружения по 11 байт.
-// Дальше начинается tsSPEED.
         assertEquals(146042, reader.position());
 
+        // ===== tsSPEED — установленные скорости =====
 
-// ===== tsSPEED — установленные скорости =====
-
-// CntSPEED — количество участков из заголовка.
         List<SrvSpeed> speeds = vpiDataParser.parseSpeeds(
                 reader,
                 header.vpi().speedCount()
@@ -423,7 +399,6 @@ class SrvExampleTest {
 
         assertEquals(2, speeds.size());
 
-// Первый участок.
         SrvSpeed firstSpeed = speeds.get(0);
 
         assertEquals(1, firstSpeed.startStepIndex());
@@ -438,7 +413,6 @@ class SrvExampleTest {
         assertEquals(60, firstSpeed.freightSpeed());
         assertEquals(60, firstSpeed.emptyTrainSpeed());
 
-// Второй участок.
         SrvSpeed secondSpeed = speeds.get(1);
 
         assertEquals(202, secondSpeed.startStepIndex());
@@ -453,12 +427,9 @@ class SrvExampleTest {
         assertEquals(80, secondSpeed.freightSpeed());
         assertEquals(80, secondSpeed.emptyTrainSpeed());
 
-// 2 записи по 22 байта.
-// Следующий блок — tsTHREAD.
         assertEquals(146086, reader.position());
 
-
-// ===== tsTHREAD — участки левой рихтовочной нити =====
+        // ===== tsTHREAD — участки левой рихтовочной нити =====
 
         List<SrvThread> threads = vpiDataParser.parseThreads(
                 reader,
@@ -467,23 +438,20 @@ class SrvExampleTest {
 
         assertEquals(2, threads.size());
 
-// Первый участок.
         SrvThread firstThread = threads.get(0);
 
         assertEquals(25, firstThread.startStepIndex());
         assertEquals(606, firstThread.endStepIndex());
 
-// Второй участок.
         SrvThread secondThread = threads.get(1);
 
         assertEquals(1479, secondThread.startStepIndex());
         assertEquals(11924, secondThread.endStepIndex());
 
-// Конец tsTHREAD, начало tsUROV.
+        // Конец tsTHREAD, начало tsUROV.
         assertEquals(146102, reader.position());
 
-
-// ===== tsUROV — точки возвышения =====
+        // ===== tsUROV — точки возвышения =====
 
         List<SrvElevation> elevations = vpiDataParser.parseElevations(
                 reader,
@@ -492,36 +460,34 @@ class SrvExampleTest {
 
         assertEquals(15, elevations.size());
 
-// Первая точка.
         SrvElevation firstElevation = elevations.get(0);
 
         assertEquals(1, firstElevation.stepIndex());
 
-// В файле хранится именно отрицательный ноль.
+        // Знак нуля должен сохраняться при чтении.
         assertEquals(
                 Float.floatToRawIntBits(-0.0f),
                 Float.floatToRawIntBits(firstElevation.valueMm())
         );
 
-// Точка с возвышением +120 мм.
+        // Точка с возвышением +120 мм.
         SrvElevation positiveElevation = elevations.get(2);
 
         assertEquals(757, positiveElevation.stepIndex());
         assertEquals(120.0f, positiveElevation.valueMm());
 
-// Точка с возвышением -60 мм.
+        // Точка с возвышением -60 мм.
         SrvElevation negativeElevation = elevations.get(6);
 
         assertEquals(5162, negativeElevation.stepIndex());
         assertEquals(-60.0f, negativeElevation.valueMm());
 
-// Точка с возвышением -40 мм.
+        // Точка с возвышением -40 мм.
         SrvElevation anotherElevation = elevations.get(10);
 
         assertEquals(9204, anotherElevation.stepIndex());
         assertEquals(-40.0f, anotherElevation.valueMm());
 
-// Последняя точка.
         SrvElevation lastElevation = elevations.get(14);
 
         assertEquals(11924, lastElevation.stepIndex());
@@ -530,14 +496,11 @@ class SrvExampleTest {
                 Float.floatToRawIntBits(lastElevation.valueMm())
         );
 
-// Конец tsUROV, начало tsCURVE.
+        // Конец tsUROV, начало tsCURVE.
         assertEquals(146222, reader.position());
 
+        // ===== tsCURVE — параметры кривых пути =====
 
-
-// ===== tsCURVE — параметры кривых пути =====
-
-// CntCURVE — количество точек параметров кривых.
         List<SrvCurve> curves = vpiDataParser.parseCurves(
                 reader,
                 header.vpi().curveCount()
@@ -545,7 +508,6 @@ class SrvExampleTest {
 
         assertEquals(15, curves.size());
 
-// Первая точка.
         SrvCurve firstCurve = curves.get(0);
 
         assertEquals(1, firstCurve.stepIndex());
@@ -553,13 +515,13 @@ class SrvExampleTest {
         assertEquals(0.0f, firstCurve.wearMm());
         assertEquals(0.0f, firstCurve.toleranceMm());
 
-// RI — в файле записан отрицательный ноль.
+        // RI содержит отрицательный ноль.
         assertEquals(
                 Float.floatToRawIntBits(-0.0f),
                 Float.floatToRawIntBits(firstCurve.radiusM())
         );
 
-// Точка с радиусом 638 метров.
+        // Точка с радиусом 638 метров.
         SrvCurve positiveCurve = curves.get(2);
 
         assertEquals(757, positiveCurve.stepIndex());
@@ -568,7 +530,7 @@ class SrvExampleTest {
         assertEquals(2.0f, positiveCurve.wearMm());
         assertEquals(0.0f, positiveCurve.toleranceMm());
 
-// Точка с отрицательным радиусом.
+        // Точка с отрицательным радиусом.
         SrvCurve negativeCurve = curves.get(6);
 
         assertEquals(5162, negativeCurve.stepIndex());
@@ -576,13 +538,12 @@ class SrvExampleTest {
         assertEquals(1520.0f, negativeCurve.gaugeNormMm());
         assertEquals(2.0f, negativeCurve.wearMm());
 
-// Ещё одна точка с отрицательным радиусом.
+        // Точка с радиусом -1250 м.
         SrvCurve anotherCurve = curves.get(10);
 
         assertEquals(9204, anotherCurve.stepIndex());
         assertEquals(-1250.0f, anotherCurve.radiusM());
 
-// Последняя точка.
         SrvCurve lastCurve = curves.get(14);
 
         assertEquals(11924, lastCurve.stepIndex());
@@ -590,13 +551,10 @@ class SrvExampleTest {
         assertEquals(0.0f, lastCurve.wearMm());
         assertEquals(0.0f, lastCurve.toleranceMm());
 
-// 15 записей по 20 байт = 300 байт.
-// Следующий блок — tsDEFECT.
         assertEquals(146522, reader.position());
 
-// ===== tsDEFECT — неисправности пути =====
+        // ===== tsDEFECT — неисправности пути =====
 
-// CntDEFECT — количество неисправностей в заголовке.
         List<SrvDefect> defects = vpiDataParser.parseDefects(
                 reader,
                 header.vpi().defectCount()
@@ -604,7 +562,7 @@ class SrvExampleTest {
 
         assertEquals(25, defects.size());
 
-// Первая неисправность — рихтовка по правому борту.
+        // Первая неисправность — рихтовка по правому борту.
         SrvDefect firstDefect = defects.get(0);
 
         assertEquals(0, firstDefect.startStepIndex());
@@ -620,7 +578,7 @@ class SrvExampleTest {
         assertEquals(1, firstDefect.degree());
         assertEquals("Р", firstDefect.label());
 
-// Вторая неисправность — рихтовка по левому борту.
+        // Вторая неисправность — рихтовка по левому борту.
         SrvDefect secondDefect = defects.get(1);
 
         assertEquals(37, secondDefect.startStepIndex());
@@ -631,7 +589,7 @@ class SrvExampleTest {
         assertEquals(2, secondDefect.degree());
         assertEquals("Р", secondDefect.label());
 
-// Пятая неисправность — перекос.
+        // Пятая неисправность — перекос.
         SrvDefect fifthDefect = defects.get(4);
 
         assertEquals(839, fifthDefect.startStepIndex());
@@ -641,7 +599,7 @@ class SrvExampleTest {
         assertEquals(3115, fifthDefect.typeCode());
         assertEquals("П", fifthDefect.label());
 
-// Просадка по левому борту.
+        // Просадка по левому борту.
         SrvDefect subsidence = defects.get(20);
 
         assertEquals(11366, subsidence.startStepIndex());
@@ -651,7 +609,6 @@ class SrvExampleTest {
         assertEquals(3119, subsidence.typeCode());
         assertEquals("Пр", subsidence.label());
 
-// Последняя неисправность.
         SrvDefect lastDefect = defects.get(24);
 
         assertEquals(11891, lastDefect.startStepIndex());
@@ -660,13 +617,11 @@ class SrvExampleTest {
         assertEquals(9.0f, lastDefect.valueMm());
         assertEquals(1, lastDefect.degree());
 
-// 25 неисправностей по 30 байт = 750 байт.
         assertEquals(147272, reader.position());
 
+        // ===== tsGABARIT — габариты обустройства пути =====
 
-// ===== tsGABARIT — габариты обустройства пути =====
-
-// CntGABARIT — в ivm.srv габаритов нет.
+        // CntGABARIT — в ivm.srv габаритов нет.
         List<SrvGabarit> gabarits = vpiDataParser.parseGabarits(
                 reader,
                 header.vpi().gabaritCount()
@@ -674,11 +629,10 @@ class SrvExampleTest {
 
         assertTrue(gabarits.isEmpty());
 
-// Ничего не прочитано, позиция не изменилась.
+        // Пустой блок не меняет позицию чтения.
         assertEquals(147272, reader.position());
 
-
-// ===== tsGEO_COORD — GNSS-координаты оси пути =====
+        // ===== tsGEO_COORD — GNSS-координаты оси пути =====
 
         List<SrvGeoCoordinate> coordinates =
                 vpiDataParser.parseGeoCoordinates(
@@ -688,31 +642,29 @@ class SrvExampleTest {
 
         assertEquals(11902, coordinates.size());
 
-// Первая точка, совпадает с XLSX.
+        // Первая GNSS-точка.
         SrvGeoCoordinate first_geo = coordinates.get(0);
 
         assertEquals(55.11728140147731, first_geo.latitude());
         assertEquals(83.00798073517092, first_geo.longitude());
         assertEquals(0.0, first_geo.altitude());
 
-// Вторая точка.
+        // Вторая GNSS-точка.
         SrvGeoCoordinate second = coordinates.get(1);
 
         assertEquals(55.11728770953188, second.latitude());
         assertEquals(83.0079863212119, second.longitude());
         assertEquals(0.0, second.altitude());
 
-// Последняя точка из ivm.srv.
+        // Последняя GNSS-точка.
         SrvGeoCoordinate last_geo = coordinates.get(11901);
 
         assertEquals(55.152011147838394, last_geo.latitude());
         assertEquals(83.10564274661138, last_geo.longitude());
         assertEquals(0.0, last_geo.altitude());
 
-// 11902 записи по 24 байта.
-// Проверяем, что прочитали файл до конца.
+        // Файл прочитан до конца.
         assertEquals(432920, reader.position());
         assertEquals(data.length, reader.position());
-
     }
 }
