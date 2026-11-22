@@ -2,12 +2,14 @@
 package ru.ccfit.nsu.navigator.dataservice.service;
 
 import org.springframework.stereotype.Service;
-import ru.ccfit.nsu.navigator.dataservice.entity.*;
+import ru.ccfit.nsu.navigator.dataservice.entity.survey.GeoCoordinate;
+import ru.ccfit.nsu.navigator.dataservice.entity.survey.vpi.*;
 import ru.ccfit.nsu.navigator.dataservice.exception.SrvParsingException;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.SrvVpiData;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.track.SrvDefect;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.vpiD.*;
-import ru.ccfit.nsu.navigator.dataservice.repository.*;
+import ru.ccfit.nsu.navigator.dataservice.repository.survey.GeoCoordinateRepository;
+import ru.ccfit.nsu.navigator.dataservice.repository.survey.vpi.*;
 
 import java.util.ArrayList;
 import java.util.List;

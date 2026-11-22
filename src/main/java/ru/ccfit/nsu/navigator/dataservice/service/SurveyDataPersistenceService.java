@@ -2,13 +2,17 @@
 package ru.ccfit.nsu.navigator.dataservice.service;
 
 import org.springframework.stereotype.Service;
-import ru.ccfit.nsu.navigator.dataservice.entity.*;
+import ru.ccfit.nsu.navigator.dataservice.entity.survey.SurveyChannel;
+import ru.ccfit.nsu.navigator.dataservice.entity.survey.SurveyMarker;
+import ru.ccfit.nsu.navigator.dataservice.entity.survey.SurveyRfid;
 import ru.ccfit.nsu.navigator.dataservice.exception.SrvParsingException;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.*;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.channelInfo.SrvChannelInfo;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.marker.SrvMarker;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.rfid.SrvRfid;
-import ru.ccfit.nsu.navigator.dataservice.repository.*;
+import ru.ccfit.nsu.navigator.dataservice.repository.survey.SurveyChannelRepository;
+import ru.ccfit.nsu.navigator.dataservice.repository.survey.SurveyMarkerRepository;
+import ru.ccfit.nsu.navigator.dataservice.repository.survey.SurveyRfidRepository;
 
 import java.util.ArrayList;
 import java.util.List;

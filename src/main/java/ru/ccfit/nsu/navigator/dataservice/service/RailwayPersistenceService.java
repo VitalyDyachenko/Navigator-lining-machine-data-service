@@ -1,9 +1,13 @@
 package ru.ccfit.nsu.navigator.dataservice.service;
 
 import org.springframework.stereotype.Service;
-import ru.ccfit.nsu.navigator.dataservice.entity.*;
+import ru.ccfit.nsu.navigator.dataservice.entity.railway.Direction;
+import ru.ccfit.nsu.navigator.dataservice.entity.railway.Railway;
+import ru.ccfit.nsu.navigator.dataservice.entity.railway.Station;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.track.*;
-import ru.ccfit.nsu.navigator.dataservice.repository.*;
+import ru.ccfit.nsu.navigator.dataservice.repository.railway.DirectionRepository;
+import ru.ccfit.nsu.navigator.dataservice.repository.railway.RailwayRepository;
+import ru.ccfit.nsu.navigator.dataservice.repository.railway.StationRepository;
 
 @Service
 public class RailwayPersistenceService {

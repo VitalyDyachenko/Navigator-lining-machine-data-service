@@ -2,12 +2,18 @@
 package ru.ccfit.nsu.navigator.dataservice.service;
 
 import org.springframework.stereotype.Service;
-import ru.ccfit.nsu.navigator.dataservice.entity.*;
+import ru.ccfit.nsu.navigator.dataservice.entity.machine.Machine;
+import ru.ccfit.nsu.navigator.dataservice.entity.machine.MachineParams;
+import ru.ccfit.nsu.navigator.dataservice.entity.survey.Survey;
+import ru.ccfit.nsu.navigator.dataservice.entity.work.Work;
 import ru.ccfit.nsu.navigator.dataservice.exception.SrvParsingException;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.*;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.track.SrvTrack;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.vpiH.*;
-import ru.ccfit.nsu.navigator.dataservice.repository.*;
+import ru.ccfit.nsu.navigator.dataservice.repository.machine.MachineParamsRepository;
+import ru.ccfit.nsu.navigator.dataservice.repository.machine.MachineRepository;
+import ru.ccfit.nsu.navigator.dataservice.repository.survey.SurveyRepository;
+import ru.ccfit.nsu.navigator.dataservice.repository.work.WorkRepository;
 
 @Service
 public class SurveyPersistenceService {

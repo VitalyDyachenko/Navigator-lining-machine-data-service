@@ -5,12 +5,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import ru.ccfit.nsu.navigator.dataservice.dto.DownloadFileResponse;
 import ru.ccfit.nsu.navigator.dataservice.dto.WorkFilesResponse;
-import ru.ccfit.nsu.navigator.dataservice.entity.*;
+import ru.ccfit.nsu.navigator.dataservice.entity.work.WorkFiles;
 import ru.ccfit.nsu.navigator.dataservice.exception.InvalidFileTypeException;
 import ru.ccfit.nsu.navigator.dataservice.exception.WorkNotFoundException;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.SurveyParser;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.SrvSurvey;
-import ru.ccfit.nsu.navigator.dataservice.repository.*;
+import ru.ccfit.nsu.navigator.dataservice.repository.work.WorkFilesRepository;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
