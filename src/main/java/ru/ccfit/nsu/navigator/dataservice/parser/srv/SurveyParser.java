@@ -29,9 +29,9 @@ public class SurveyParser {
         // tsMARKER — CntMARKER маркеров съёмки.
         List<SrvMarker> markers = new SrvMarkerParser().parse(
                 reader,
-                header.markerCount()
+                header.markerCount(),
+                header.stepCount()
         );
-
         // tsRFID — CntRFID меток.
         List<SrvRfid> rfids = new SrvRfidParser().parse(
                 reader,

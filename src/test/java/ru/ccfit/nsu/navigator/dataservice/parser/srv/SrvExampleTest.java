@@ -209,7 +209,8 @@ class SrvExampleTest {
 
         List<SrvMarker> markers = markerParser.parse(
                 reader,
-                header.markerCount()
+                header.markerCount(),
+                header.stepCount()
         );
 
         assertEquals(1, markers.size());
