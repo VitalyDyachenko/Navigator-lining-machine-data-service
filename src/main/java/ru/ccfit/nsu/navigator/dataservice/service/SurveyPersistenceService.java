@@ -15,6 +15,10 @@ import ru.ccfit.nsu.navigator.dataservice.repository.machine.MachineParamsReposi
 import ru.ccfit.nsu.navigator.dataservice.repository.machine.MachineRepository;
 import ru.ccfit.nsu.navigator.dataservice.repository.survey.SurveyRepository;
 import ru.ccfit.nsu.navigator.dataservice.repository.work.WorkRepository;
+import ru.ccfit.nsu.navigator.dataservice.repository.railway.StationPositionRepository;
+import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.track.SrvStationPosition;
+
+import java.util.List;
 
 @Service
 public class SurveyPersistenceService {
@@ -26,6 +30,8 @@ public class SurveyPersistenceService {
     private final SurveyVpiPersistenceService vpiPersistenceService;
     private final SurveyDataPersistenceService dataPersistenceService;
     private final RailwayPersistenceService railwayPersistenceService;
+    private final StationPositionRepository stationPositionRepository;
+
 
     public SurveyPersistenceService(
             MachineRepository machineRepository,
@@ -34,7 +40,8 @@ public class SurveyPersistenceService {
             SurveyRepository surveyRepository,
             SurveyVpiPersistenceService vpiPersistenceService,
             SurveyDataPersistenceService dataPersistenceService,
-            RailwayPersistenceService railwayPersistenceService
+            RailwayPersistenceService railwayPersistenceService,
+            StationPositionRepository stationPositionRepository
     ) {
         this.machineRepository = machineRepository;
         this.machineParamsRepository = machineParamsRepository;
@@ -43,7 +50,9 @@ public class SurveyPersistenceService {
         this.vpiPersistenceService = vpiPersistenceService;
         this.dataPersistenceService = dataPersistenceService;
         this.railwayPersistenceService = railwayPersistenceService;
+        this.stationPositionRepository = stationPositionRepository;
     }
+
 
     public Long save(SrvSurvey source) {
         SrvHeader header = source.header();
@@ -72,12 +81,20 @@ public class SurveyPersistenceService {
                 track.peregon(), direction, firstStation, secondStation
         );
 
-
         Work work = saveWork(header, machine, mainTrack, peregon);
+
+        saveStationPositions(
+                work.getId(),
+                track,
+                firstStation,
+                secondStation
+        );
+
         saveSurvey(work, params, header);
 
         vpiPersistenceService.save(work.getId(), source.vpiData());
         dataPersistenceService.save(work.getId(), source);
+
 
         return work.getId();
     }
@@ -91,6 +108,39 @@ public class SurveyPersistenceService {
                 || track.peregon().startStationSourceId() != track.station1().sourceId()
                 || track.peregon().endStationSourceId() != track.station2().sourceId()) {
             throw new SrvParsingException("Inconsistent railway references in SRV");
+        }
+
+        validateStationPositionReferences(
+                track.stationPosition1(),
+                track.station1().sourceId(),
+                track.mainTrack().sourceId(),
+                "STANKM1"
+        );
+
+        validateStationPositionReferences(
+                track.stationPosition2(),
+                track.station2().sourceId(),
+                track.mainTrack().sourceId(),
+                "STANKM2"
+        );
+    }
+
+    private void validateStationPositionReferences(
+            SrvStationPosition position,
+            int expectedStationSourceId,
+            int expectedMainTrackSourceId,
+            String positionName
+    ) {
+        if (position.stationSourceId() != expectedStationSourceId) {
+            throw new SrvParsingException(
+                    positionName + ": station source ID mismatch"
+            );
+        }
+
+        if (position.mainTrackSourceId() != expectedMainTrackSourceId) {
+            throw new SrvParsingException(
+                    positionName + ": main track source ID mismatch"
+            );
         }
     }
 
@@ -194,4 +244,50 @@ public class SurveyPersistenceService {
                 trip.checked()
         );
     }
+
+    private void saveStationPositions(
+            Long workId,
+            SrvTrack track,
+            Station firstStation,
+            Station secondStation
+    ) {
+        StationPosition firstPosition = createStationPosition(
+                workId,
+                (short) 1,
+                firstStation,
+                track.stationPosition1()
+        );
+
+        StationPosition secondPosition = createStationPosition(
+                workId,
+                (short) 2,
+                secondStation,
+                track.stationPosition2()
+        );
+
+        stationPositionRepository.saveAll(
+                List.of(firstPosition, secondPosition)
+        );
+    }
+
+    private StationPosition createStationPosition(
+            Long workId,
+            short order,
+            Station station,
+            SrvStationPosition source
+    ) {
+        return new StationPosition(
+                workId,
+                order,
+                station,
+                source.axisAttributeId(),
+                source.axisKm(),
+                source.axisM(),
+                source.startKm(),
+                source.startM(),
+                source.endKm(),
+                source.endM()
+        );
+    }
+
 }
