@@ -9,14 +9,22 @@ CREATE TABLE railway
 
 CREATE TABLE direction
 (
-    id           BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    source_id    INTEGER NOT NULL,
+    id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    source_id INTEGER NOT NULL,
 
-    railway_id   BIGINT  NOT NULL REFERENCES railway (id),
-    code         SMALLINT,
-    mag_code     SMALLINT,
-    name         VARCHAR(50)
+    railway_id BIGINT NOT NULL REFERENCES railway(id),
+
+    code SMALLINT,
+    mag_code SMALLINT,
+    name VARCHAR(50),
+
+    start_station_source_id INTEGER,
+    end_station_source_id INTEGER,
+
+    CONSTRAINT uq_direction_source UNIQUE (railway_id, source_id)
 );
+
+
 
 CREATE TABLE main_track
 (
@@ -27,21 +35,27 @@ CREATE TABLE main_track
 
     number            VARCHAR(7),
     gauge_width_id    SMALLINT,
-    main_track_source_id_osn INTEGER
+    main_track_source_id_osn INTEGER,
+
+    CONSTRAINT uq_main_track_source
+        UNIQUE (direction_id, source_id)
 );
 
---TODO NOT NULL
 
 CREATE TABLE station
 (
-    id            BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    source_id     INTEGER NOT NULL,
-    code          INTEGER,
+    id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    source_id INTEGER NOT NULL,
+    code INTEGER,
     department_id INTEGER,
-    okato_id      INTEGER,
-    type_id       SMALLINT,
-    name          VARCHAR(38)
+    okato_id INTEGER,
+    type_id SMALLINT,
+    name VARCHAR(38),
+
+    CONSTRAINT uq_station_source UNIQUE (source_id)
+    --TODO возможно код станции уникален только относительно дороги, мб составной ключ
 );
+
 
 
 CREATE TABLE peregon
@@ -55,7 +69,10 @@ CREATE TABLE peregon
     end_station_id      BIGINT  NOT NULL REFERENCES station (id),
 
     exploitation_length DOUBLE PRECISION,
-    name                VARCHAR(64)
+    name VARCHAR(64),
+
+    CONSTRAINT uq_peregon_source
+        UNIQUE (direction_id, source_id)
 );
 
 
@@ -77,10 +94,13 @@ VALUES
 
 CREATE TABLE machine
 (
-    id     BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     number BIGINT,
-    name   VARCHAR(24),
-    type_id SMALLINT REFERENCES machine_type(id)
+    name VARCHAR(24),
+    type_id SMALLINT REFERENCES machine_type(id),
+
+    CONSTRAINT uq_machine_identity
+        UNIQUE NULLS NOT DISTINCT (number, name, type_id)
 );
 
 CREATE TABLE machine_params

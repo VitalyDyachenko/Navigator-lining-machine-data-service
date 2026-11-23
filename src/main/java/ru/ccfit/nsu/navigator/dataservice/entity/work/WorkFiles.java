@@ -1,4 +1,4 @@
-package ru.ccfit.nsu.navigator.dataservice.entity;
+package ru.ccfit.nsu.navigator.dataservice.entity.work;
 
 import jakarta.persistence.*;
 import org.hibernate.annotations.JdbcTypeCode;
