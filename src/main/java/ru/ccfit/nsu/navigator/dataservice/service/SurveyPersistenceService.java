@@ -4,6 +4,7 @@ package ru.ccfit.nsu.navigator.dataservice.service;
 import org.springframework.stereotype.Service;
 import ru.ccfit.nsu.navigator.dataservice.entity.machine.Machine;
 import ru.ccfit.nsu.navigator.dataservice.entity.machine.MachineParams;
+import ru.ccfit.nsu.navigator.dataservice.entity.railway.*;
 import ru.ccfit.nsu.navigator.dataservice.entity.survey.Survey;
 import ru.ccfit.nsu.navigator.dataservice.entity.work.Work;
 import ru.ccfit.nsu.navigator.dataservice.exception.SrvParsingException;
@@ -24,6 +25,7 @@ public class SurveyPersistenceService {
     private final SurveyRepository surveyRepository;
     private final SurveyVpiPersistenceService vpiPersistenceService;
     private final SurveyDataPersistenceService dataPersistenceService;
+    private final RailwayPersistenceService railwayPersistenceService;
 
     public SurveyPersistenceService(
             MachineRepository machineRepository,
@@ -31,7 +33,8 @@ public class SurveyPersistenceService {
             WorkRepository workRepository,
             SurveyRepository surveyRepository,
             SurveyVpiPersistenceService vpiPersistenceService,
-            SurveyDataPersistenceService dataPersistenceService
+            SurveyDataPersistenceService dataPersistenceService,
+            RailwayPersistenceService railwayPersistenceService
     ) {
         this.machineRepository = machineRepository;
         this.machineParamsRepository = machineParamsRepository;
@@ -39,6 +42,7 @@ public class SurveyPersistenceService {
         this.surveyRepository = surveyRepository;
         this.vpiPersistenceService = vpiPersistenceService;
         this.dataPersistenceService = dataPersistenceService;
+        this.railwayPersistenceService = railwayPersistenceService;
     }
 
     public Long save(SrvSurvey source) {
@@ -48,13 +52,46 @@ public class SurveyPersistenceService {
         Machine machine = getOrCreateMachine(sourceMachine);
         MachineParams params = getOrCreateMachineParams(machine, sourceMachine);
 
-        Work work = saveWork(header, machine);
+
+        SrvTrack track = header.track();
+        validateTrackReferences(track);
+
+        Railway railway = railwayPersistenceService.getOrCreateRailway(track.railway());
+        Direction direction = railwayPersistenceService.getOrCreateDirection(
+                track.direction(), railway
+        );
+
+        Station firstStation = railwayPersistenceService.getOrCreateStation(track.station1());
+        Station secondStation = railwayPersistenceService.getOrCreateStation(track.station2());
+
+        MainTrack mainTrack = railwayPersistenceService.getOrCreateMainTrack(
+                track.mainTrack(), direction
+        );
+
+        Peregon peregon = railwayPersistenceService.getOrCreatePeregon(
+                track.peregon(), direction, firstStation, secondStation
+        );
+
+
+        Work work = saveWork(header, machine, mainTrack, peregon);
         saveSurvey(work, params, header);
 
         vpiPersistenceService.save(work.getId(), source.vpiData());
         dataPersistenceService.save(work.getId(), source);
 
         return work.getId();
+    }
+
+
+    private void validateTrackReferences(SrvTrack track) {
+        int directionId = track.direction().sourceId();
+
+        if (track.mainTrack().directionSourceId() != directionId
+                || track.peregon().directionSourceId() != directionId
+                || track.peregon().startStationSourceId() != track.station1().sourceId()
+                || track.peregon().endStationSourceId() != track.station2().sourceId()) {
+            throw new SrvParsingException("Inconsistent railway references in SRV");
+        }
     }
 
 
@@ -92,11 +129,16 @@ public class SurveyPersistenceService {
                 .orElseGet(() -> machineParamsRepository.save(params));
     }
 
-    private Work saveWork(SrvHeader header, Machine machine) {
+
+    private Work saveWork(SrvHeader header, Machine machine,
+                          MainTrack mainTrack, Peregon peregon) {
         SrvTrack track = header.track();
         Work work = Work.createPending();
 
         work.setMachine(machine);
+        work.setMainTrack(mainTrack);
+        work.setPeregon(peregon);
+
         work.setTrackInfo(track.trackNumber(), track.administrativeCode());
         work.setTrackRange(
                 track.begin().km(), track.begin().meters(), track.begin().millimeters(),

@@ -35,7 +35,10 @@ CREATE TABLE main_track
 
     number            VARCHAR(7),
     gauge_width_id    SMALLINT,
-    main_track_source_id_osn INTEGER
+    main_track_source_id_osn INTEGER,
+
+    CONSTRAINT uq_main_track_source
+        UNIQUE (direction_id, source_id)
 );
 
 
@@ -66,7 +69,10 @@ CREATE TABLE peregon
     end_station_id      BIGINT  NOT NULL REFERENCES station (id),
 
     exploitation_length DOUBLE PRECISION,
-    name                VARCHAR(64)
+    name VARCHAR(64),
+
+    CONSTRAINT uq_peregon_source
+        UNIQUE (direction_id, source_id)
 );
 
 

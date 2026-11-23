@@ -3,6 +3,8 @@ package ru.ccfit.nsu.navigator.dataservice.entity.work;
 
 import jakarta.persistence.*;
 import ru.ccfit.nsu.navigator.dataservice.entity.machine.Machine;
+import ru.ccfit.nsu.navigator.dataservice.entity.railway.MainTrack;
+import ru.ccfit.nsu.navigator.dataservice.entity.railway.Peregon;
 
 @Entity
 @Table(name = "work")
@@ -45,6 +47,23 @@ public class Work {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "machine_id")
     private Machine machine;
+
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "main_track_id", nullable = false)
+    private MainTrack mainTrack;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "peregon_id", nullable = false)
+    private Peregon peregon;
+
+    public void setMainTrack(MainTrack mainTrack) {
+        this.mainTrack = mainTrack;
+    }
+
+    public void setPeregon(Peregon peregon) {
+        this.peregon = peregon;
+    }
 
     public void setMachine(Machine machine) {
         this.machine = machine;

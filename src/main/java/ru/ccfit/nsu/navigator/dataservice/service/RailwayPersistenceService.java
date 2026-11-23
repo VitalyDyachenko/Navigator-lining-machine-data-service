@@ -8,6 +8,8 @@ import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.track.*;
 import ru.ccfit.nsu.navigator.dataservice.repository.railway.DirectionRepository;
 import ru.ccfit.nsu.navigator.dataservice.repository.railway.RailwayRepository;
 import ru.ccfit.nsu.navigator.dataservice.repository.railway.StationRepository;
+import ru.ccfit.nsu.navigator.dataservice.entity.railway.*;
+import ru.ccfit.nsu.navigator.dataservice.repository.railway.*;
 
 @Service
 public class RailwayPersistenceService {
@@ -15,14 +17,23 @@ public class RailwayPersistenceService {
     private final RailwayRepository railwayRepository;
     private final DirectionRepository directionRepository;
     private final StationRepository stationRepository;
+    private final MainTrackRepository mainTrackRepository;
+    private final PeregonRepository peregonRepository;
+
 
     public RailwayPersistenceService(RailwayRepository railwayRepository,
                                      DirectionRepository directionRepository,
-                                     StationRepository stationRepository) {
+                                     StationRepository stationRepository,
+                                     MainTrackRepository mainTrackRepository,
+                                     PeregonRepository peregonRepository)
+    {
         this.railwayRepository = railwayRepository;
         this.directionRepository = directionRepository;
         this.stationRepository = stationRepository;
+        this.mainTrackRepository = mainTrackRepository;
+        this.peregonRepository = peregonRepository;
     }
+
 
     public Railway getOrCreateRailway(SrvRailway source) {
         return railwayRepository.findByCode(source.code())
@@ -59,6 +70,36 @@ public class RailwayPersistenceService {
                                 source.name()
                         )
                 ));
+    }
+
+    public MainTrack getOrCreateMainTrack(SrvMainTrack source, Direction direction) {
+        return mainTrackRepository.findByDirection_IdAndSourceId(
+                direction.getId(), source.sourceId()
+        ).orElseGet(() -> mainTrackRepository.save(
+                new MainTrack(
+                        source.sourceId(),
+                        direction,
+                        source.number(),
+                        source.gaugeWidthId(),
+                        source.mainTrackSourceIdOsn()
+                )
+        ));
+    }
+
+    public Peregon getOrCreatePeregon(SrvPeregon source, Direction direction,
+                                      Station startStation, Station endStation) {
+        return peregonRepository.findByDirection_IdAndSourceId(
+                direction.getId(), source.sourceId()
+        ).orElseGet(() -> peregonRepository.save(
+                new Peregon(
+                        source.sourceId(),
+                        direction,
+                        startStation,
+                        endStation,
+                        source.exploitationLength(),
+                        source.name()
+                )
+        ));
     }
 
 }

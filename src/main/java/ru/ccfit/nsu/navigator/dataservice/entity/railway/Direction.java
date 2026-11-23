@@ -1,4 +1,3 @@
-
 package ru.ccfit.nsu.navigator.dataservice.entity.railway;
 
 import jakarta.persistence.*;
