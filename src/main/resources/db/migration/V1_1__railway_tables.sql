@@ -94,10 +94,13 @@ VALUES
 
 CREATE TABLE machine
 (
-    id     BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     number BIGINT,
-    name   VARCHAR(24),
-    type_id SMALLINT REFERENCES machine_type(id)
+    name VARCHAR(24),
+    type_id SMALLINT REFERENCES machine_type(id),
+
+    CONSTRAINT uq_machine_identity
+        UNIQUE NULLS NOT DISTINCT (number, name, type_id)
 );
 
 CREATE TABLE machine_params

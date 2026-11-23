@@ -14,6 +14,8 @@ import ru.ccfit.nsu.navigator.dataservice.repository.work.WorkFilesRepository;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -87,9 +89,10 @@ public class WorkFilesService {
         ByteArrayOutputStream output = new ByteArrayOutputStream();
 
         try (ZipOutputStream zip = new ZipOutputStream(output)) {
-            addToZip(zip, files.getSurveyFilename(), files.getSurveyFile());
-            addToZip(zip, files.getCalculationFilename(), files.getCalculationFile());
-            addToZip(zip, files.getWorkFilename(), files.getWorkFile());
+            Set<String> names = new HashSet<>();
+            addToZip(zip, names, "survey", files.getSurveyFilename(), files.getSurveyFile());
+            addToZip(zip, names, "calculation", files.getCalculationFilename(), files.getCalculationFile());
+            addToZip(zip, names, "work", files.getWorkFilename(), files.getWorkFile());
         }
 
         return output.toByteArray();
@@ -97,13 +100,24 @@ public class WorkFilesService {
 
     private void addToZip(
             ZipOutputStream zip,
+            Set<String> names,
+            String type,
             String filename,
             byte[] content
     ) throws IOException {
         String safeName = filename.replace('\\', '/');
         safeName = safeName.substring(safeName.lastIndexOf('/') + 1);
+        if (safeName.isBlank() || safeName.equals(".") || safeName.equals("..")) {
+            safeName = type + ".bin";
+        }
+        String entryName = safeName;
+        int suffix = 2;
+        if (names.contains(entryName)) entryName = type + "-" + safeName;
+        while (!names.add(entryName)) {
+            entryName = type + "-" + suffix++ + "-" + safeName;
+        }
 
-        zip.putNextEntry(new ZipEntry(safeName));
+        zip.putNextEntry(new ZipEntry(entryName));
         zip.write(content);
         zip.closeEntry();
     }

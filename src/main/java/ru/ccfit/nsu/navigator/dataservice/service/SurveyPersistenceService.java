@@ -145,6 +145,7 @@ public class SurveyPersistenceService {
     }
 
 
+
     private Machine getOrCreateMachine(SrvMachine source) {
         if (source.machineType() < 0 || source.machineType() > 4) {
             throw new SrvParsingException("Unsupported machine type: " + source.machineType());
@@ -152,12 +153,21 @@ public class SurveyPersistenceService {
 
         short typeId = (short) source.machineType();
 
-        return machineRepository.findFirstByNumberAndNameAndTypeId(
-                source.number(), source.name(), typeId
-        ).orElseGet(() -> machineRepository.save(
-                new Machine(source.number(), source.name(), typeId)
+        machineRepository.insertIfMissing(
+                source.number(),
+                source.name(),
+                typeId
+        );
+
+        return machineRepository.findByNumberAndNameAndTypeId(
+                source.number(),
+                source.name(),
+                typeId
+        ).orElseThrow(() -> new IllegalStateException(
+                "Machine not found after insertIfMissing"
         ));
     }
+
 
     private MachineParams getOrCreateMachineParams(Machine machine, SrvMachine source) {
         MachineParams params = new MachineParams(
