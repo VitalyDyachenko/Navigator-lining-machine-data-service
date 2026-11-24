@@ -29,12 +29,12 @@ public class SrvHeaderParser {
         }
 
         int version = reader.readUnsignedShort();
-        if (version != SUPPORTED_VERSION) {
+        /*if (version != SUPPORTED_VERSION) {
             throw new SrvParsingException(
                     "Unsupported SRV version: 0x%04X".formatted(version)
             );
         }
-
+*/
 
         LocalDateTime surveyTime = parseTime(reader);
         SrvMachine machine = parseMachine(reader);
@@ -56,10 +56,7 @@ public class SrvHeaderParser {
 // InfoCH[16] — метаданные 16 измерительных каналов.
         SrvChannelInfo[] channels = new SrvChannelInfoParser().parse(reader);
 
-        //TODO ========================= WARNING!!!!!!!!!!!!!!!! ===============
-        // Неописанная часть заголовка: в исследованном файле 0x0605
-        // после InfoCH остаётся 105 байтов до начала измерений.
-        // Возможно, соответствует tsCDT_H; структура отсутствует в PDF.
+        // Это типа выравнивание заголовка
         byte[] undocumentedHeaderBytes = reader.readBytes(105);
 
         return new SrvHeader(

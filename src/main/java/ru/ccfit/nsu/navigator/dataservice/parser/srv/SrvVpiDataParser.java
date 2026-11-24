@@ -27,8 +27,14 @@ public class SrvVpiDataParser {
     public SrvFragment parseFragment(SrvBinaryReader reader, long fragmentCount)
     {
         // CntFRAG — количество фрагментов в файле.
+        if (fragmentCount == 0) { //Данные не от впи вагончика
+            return null;
+        }
+
         if (fragmentCount != 1) {
-            throw new SrvParsingException("Expected exactly one fragment, got: " + fragmentCount);
+            throw new SrvParsingException(
+                    "Expected at most one fragment, got: " + fragmentCount
+            );
         }
 
         // tsFRAG — проверяем наличие 79 байт для фрагмента.

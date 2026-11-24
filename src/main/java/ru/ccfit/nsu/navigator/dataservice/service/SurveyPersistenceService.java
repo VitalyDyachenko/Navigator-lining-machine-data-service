@@ -103,10 +103,12 @@ public class SurveyPersistenceService {
     private void validateTrackReferences(SrvTrack track) {
         int directionId = track.direction().sourceId();
 
-        if (track.mainTrack().directionSourceId() != directionId
+        if ((track.mainTrack().directionSourceId() != 0
+                && track.mainTrack().directionSourceId() != directionId)
                 || track.peregon().directionSourceId() != directionId
                 || track.peregon().startStationSourceId() != track.station1().sourceId()
                 || track.peregon().endStationSourceId() != track.station2().sourceId()) {
+
             throw new SrvParsingException("Inconsistent railway references in SRV");
         }
 
@@ -242,6 +244,20 @@ public class SurveyPersistenceService {
 
     private void setSurveyTrip(Survey survey, SrvVpiHeader vpi) {
         SrvTripId trip = vpi.tripId();
+
+        // Если данные проезда ВПИ отсутствуют,
+        // не заполняем поля survey фиктивными нулями.
+        if (vpi.fragmentCount() == 0
+                && vpi.startStep() == 0
+                && trip.tripNumber() == 0
+                && trip.wagonNumber() == 0
+                && trip.year() == 0
+                && trip.month() == 0
+                && trip.railwayCode() == 0
+                && trip.checkCode() == 0
+                && !trip.checked()) {
+            return;
+        }
 
         survey.setTrip(
                 vpi.startStep(),
