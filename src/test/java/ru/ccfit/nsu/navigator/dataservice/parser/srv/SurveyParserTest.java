@@ -3,7 +3,7 @@ package ru.ccfit.nsu.navigator.dataservice.parser.srv;
 
 import org.junit.jupiter.api.Test;
 
-import ru.ccfit.nsu.navigator.dataservice.exception.SrvParsingException;
+import ru.ccfit.nsu.navigator.dataservice.exception.parsing.SrvParsingException;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.SrvSurvey;
 
 import java.io.InputStream;

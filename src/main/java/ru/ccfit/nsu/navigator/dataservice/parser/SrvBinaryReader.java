@@ -3,7 +3,7 @@ package ru.ccfit.nsu.navigator.dataservice.parser;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import ru.ccfit.nsu.navigator.dataservice.exception.SrvParsingException;
+import ru.ccfit.nsu.navigator.dataservice.exception.parsing.SrvParsingException;
 
 public final class SrvBinaryReader {
 

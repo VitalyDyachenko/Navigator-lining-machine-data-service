@@ -1,6 +1,6 @@
 package ru.ccfit.nsu.navigator.dataservice.parser.srv;
 
-import ru.ccfit.nsu.navigator.dataservice.exception.SrvParsingException;
+import ru.ccfit.nsu.navigator.dataservice.exception.parsing.SrvParsingException;
 import ru.ccfit.nsu.navigator.dataservice.parser.SrvBinaryReader;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.SrvHeader;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.SrvMachine;
@@ -91,7 +91,7 @@ public class SrvHeaderParser {
             return LocalDateTime.of(year, month, day, hours, minutes);
         } catch (DateTimeException e) {
             throw new SrvParsingException(
-                    "Invalid survey date at offset 8", e
+                    "Invalid survey date at offset 8"
             );
         }
     }
