@@ -91,7 +91,7 @@ public class SrvHeaderParser {
             return LocalDateTime.of(year, month, day, hours, minutes);
         } catch (DateTimeException e) {
             throw new SrvParsingException(
-                    "Invalid survey date at offset 8", e
+                    "Invalid survey date at offset 8"
             );
         }
     }
