@@ -103,10 +103,12 @@ public class SurveyPersistenceService {
     private void validateTrackReferences(SrvTrack track) {
         int directionId = track.direction().sourceId();
 
-        if (track.mainTrack().directionSourceId() != directionId
+        if ((track.mainTrack().directionSourceId() != 0
+                && track.mainTrack().directionSourceId() != directionId)
                 || track.peregon().directionSourceId() != directionId
                 || track.peregon().startStationSourceId() != track.station1().sourceId()
                 || track.peregon().endStationSourceId() != track.station2().sourceId()) {
+
             throw new SrvParsingException("Inconsistent railway references in SRV");
         }
 
