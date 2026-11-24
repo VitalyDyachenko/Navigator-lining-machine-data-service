@@ -58,7 +58,9 @@ public class SurveyVpiPersistenceService {
 
 
     public void save(Long workId, SrvVpiData vpi) {
-        saveFragment(workId, vpi.fragment());
+        if (vpi.fragment() != null) {
+            saveFragment(workId, vpi.fragment());
+        }
         savePosts(workId, vpi.posts());
         saveSwitches(workId, vpi.switches());
         saveBuilds(workId, vpi.builds());

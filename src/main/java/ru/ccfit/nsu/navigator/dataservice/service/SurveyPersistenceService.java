@@ -243,6 +243,20 @@ public class SurveyPersistenceService {
     private void setSurveyTrip(Survey survey, SrvVpiHeader vpi) {
         SrvTripId trip = vpi.tripId();
 
+        // Если данные проезда ВПИ отсутствуют,
+        // не заполняем поля survey фиктивными нулями.
+        if (vpi.fragmentCount() == 0
+                && vpi.startStep() == 0
+                && trip.tripNumber() == 0
+                && trip.wagonNumber() == 0
+                && trip.year() == 0
+                && trip.month() == 0
+                && trip.railwayCode() == 0
+                && trip.checkCode() == 0
+                && !trip.checked()) {
+            return;
+        }
+
         survey.setTrip(
                 vpi.startStep(),
                 trip.tripNumber(),
