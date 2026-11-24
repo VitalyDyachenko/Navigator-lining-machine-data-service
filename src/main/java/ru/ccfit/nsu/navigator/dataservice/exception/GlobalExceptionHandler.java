@@ -146,18 +146,4 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 		}
 		return "";
 	}
-	@ExceptionHandler(SrvParsingException.class)
-	public ResponseEntity<ErrorResponse> handleSrvParsingException(SrvParsingException ex, HttpServletRequest request)
-	{
-		log.warn("Invalid SRV file: {}", ex.getMessage());
-
-		ErrorResponse error = buildError(
-				HttpStatus.BAD_REQUEST,
-				"INVALID_SRV_FILE",
-				ex.getMessage(),
-				request.getRequestURI()
-		);
-
-		return ResponseEntity.badRequest().body(error);
-	}
 }
