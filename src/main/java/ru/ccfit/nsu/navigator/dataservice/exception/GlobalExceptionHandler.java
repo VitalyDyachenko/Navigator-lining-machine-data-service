@@ -15,6 +15,7 @@ import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 import ru.ccfit.nsu.navigator.dataservice.dto.ErrorResponse;
+import ru.ccfit.nsu.navigator.dataservice.exception.parsing.SrvParsingException;
 
 import java.time.OffsetDateTime;
 

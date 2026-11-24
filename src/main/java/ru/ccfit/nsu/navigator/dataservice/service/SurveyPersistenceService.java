@@ -7,7 +7,7 @@ import ru.ccfit.nsu.navigator.dataservice.entity.machine.MachineParams;
 import ru.ccfit.nsu.navigator.dataservice.entity.railway.*;
 import ru.ccfit.nsu.navigator.dataservice.entity.survey.Survey;
 import ru.ccfit.nsu.navigator.dataservice.entity.work.Work;
-import ru.ccfit.nsu.navigator.dataservice.exception.SrvParsingException;
+import ru.ccfit.nsu.navigator.dataservice.exception.parsing.SrvParsingException;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.*;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.track.SrvTrack;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.vpiH.*;

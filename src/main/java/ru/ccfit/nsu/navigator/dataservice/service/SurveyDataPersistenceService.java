@@ -5,7 +5,7 @@ import org.springframework.stereotype.Service;
 import ru.ccfit.nsu.navigator.dataservice.entity.survey.SurveyChannel;
 import ru.ccfit.nsu.navigator.dataservice.entity.survey.SurveyMarker;
 import ru.ccfit.nsu.navigator.dataservice.entity.survey.SurveyRfid;
-import ru.ccfit.nsu.navigator.dataservice.exception.SrvParsingException;
+import ru.ccfit.nsu.navigator.dataservice.exception.parsing.SrvParsingException;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.*;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.channelInfo.SrvChannelInfo;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.marker.SrvMarker;
