@@ -33,6 +33,19 @@ CREATE TABLE survey
     -- ======================
 );
 
+CREATE TABLE geo_coord
+(
+    id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+
+    work_id BIGINT NOT NULL REFERENCES survey(work_id),
+    point_index INTEGER NOT NULL,
+
+    latitude DOUBLE PRECISION NOT NULL,
+    longitude DOUBLE PRECISION NOT NULL,
+    altitude DOUBLE PRECISION NOT NULL,
+
+    CONSTRAINT uq_geo_point UNIQUE (work_id, point_index)
+);
 
 CREATE TABLE survey_fragment
 (
@@ -61,7 +74,7 @@ CREATE TABLE survey_post
     work_id BIGINT NOT NULL REFERENCES survey(work_id),
 
     step_index INTEGER NOT NULL,
-    kilometer_number SMALLINT NOT NULL,
+    kilometer_number INTEGER NOT NULL,
     is_passport BOOLEAN NOT NULL
 );
 
@@ -122,10 +135,10 @@ CREATE TABLE survey_speed
     start_step_index INTEGER NOT NULL,
     end_step_index INTEGER NOT NULL,
 
-    start_km SMALLINT NOT NULL,
+    start_km INTEGER NOT NULL,
     start_picket SMALLINT NOT NULL,
 
-    end_km SMALLINT NOT NULL,
+    end_km INTEGER NOT NULL,
     end_picket SMALLINT NOT NULL,
 
     passenger_speed INTEGER NOT NULL,
@@ -235,7 +248,7 @@ CREATE TABLE survey_gabarit
     control_distance_m DOUBLE PRECISION,
     step_index INTEGER,
 
-    kilometer SMALLINT,
+    kilometer INTEGER,
     picket SMALLINT,
     meter REAL,
 
@@ -352,7 +365,7 @@ CREATE TABLE survey_rfid
     tag_identifier BIGINT NOT NULL,
     data_blocks BIGINT[] NOT NULL,
 
-    kilometer SMALLINT NOT NULL,
+    kilometer INTEGER NOT NULL,
     picket SMALLINT NOT NULL,
     marker_type_id SMALLINT REFERENCES marker_type(id),
 
