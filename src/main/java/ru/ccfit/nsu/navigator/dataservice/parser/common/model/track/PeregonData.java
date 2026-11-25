@@ -1,6 +1,6 @@
-package ru.ccfit.nsu.navigator.dataservice.parser.srv.model.track;
+package ru.ccfit.nsu.navigator.dataservice.parser.common.model.track;
 
-public record SrvPeregon(
+public record PeregonData(
         int sourceId,
         int directionSourceId,
         int startStationSourceId,

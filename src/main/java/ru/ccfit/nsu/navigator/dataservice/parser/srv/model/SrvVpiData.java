@@ -3,7 +3,7 @@ package ru.ccfit.nsu.navigator.dataservice.parser.srv.model;
 import java.util.List;
 
 import ru.ccfit.nsu.navigator.dataservice.parser.common.model.GeoCoordinate;
-import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.track.SrvDefect;
+import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.vpiD.SrvDefect;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.vpiD.*;
 
 public record SrvVpiData(

@@ -1,16 +1,19 @@
 package ru.ccfit.nsu.navigator.dataservice.parser.srv;
 
 import org.junit.jupiter.api.Test;
-import ru.ccfit.nsu.navigator.dataservice.parser.SrvBinaryReader;
+import ru.ccfit.nsu.navigator.dataservice.exception.parsing.SrvParsingException;
+import ru.ccfit.nsu.navigator.dataservice.parser.common.BinaryReader;
+import ru.ccfit.nsu.navigator.dataservice.parser.common.GeoCoordinateParser;
+import ru.ccfit.nsu.navigator.dataservice.parser.common.MarkerParser;
 import ru.ccfit.nsu.navigator.dataservice.parser.common.model.GeoCoordinate;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.SrvHeader;
-import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.SrvMachine;
-import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.SrvSurveyFlags;
-import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.channelInfo.SrvChannelInfo;
-import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.marker.SrvMarker;
+import ru.ccfit.nsu.navigator.dataservice.parser.common.model.MachineData;
+import ru.ccfit.nsu.navigator.dataservice.parser.common.model.SurveyFlags;
+import ru.ccfit.nsu.navigator.dataservice.parser.common.model.ChannelInfo;
+import ru.ccfit.nsu.navigator.dataservice.parser.common.model.marker.MarkerData;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.rfid.SrvRfid;
-import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.track.SrvDefect;
-import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.track.SrvTrack;
+import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.vpiD.SrvDefect;
+import ru.ccfit.nsu.navigator.dataservice.parser.common.model.track.TrackData;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.vpiD.*;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.vpiH.SrvVpiHeader;
 
@@ -35,15 +38,16 @@ class SrvExampleTest {
             }
             data = input.readAllBytes();
         }
-        SrvBinaryReader reader = new SrvBinaryReader(data);
+        BinaryReader reader = new BinaryReader(data, SrvParsingException::new);
+
 
         SrvHeaderParser parser = new SrvHeaderParser();
 
         SrvHeader header = parser.parse(reader);
 
-        SrvTrack track = header.track();
+        TrackData track = header.track();
         SrvVpiHeader vpi = header.vpi();
-        SrvChannelInfo[] channels = header.channels();
+        ChannelInfo[] channels = header.channels();
 
         assertEquals("NavSRV", header.signature());
         assertEquals(0x0605, header.version());
@@ -52,7 +56,7 @@ class SrvExampleTest {
                 header.surveyTime()
         );
 
-        SrvMachine machine = header.machine();
+        MachineData machine = header.machine();
 
         assertEquals(1, machine.rawType());
         assertEquals(0, machine.machineType());
@@ -75,7 +79,7 @@ class SrvExampleTest {
                 machine.trolleyArms()
         );
 
-        SrvSurveyFlags flags = header.flags();
+        SurveyFlags flags = header.flags();
 
         assertFalse(flags.againstPicketage());
         assertFalse(flags.movingBackward());
@@ -206,9 +210,9 @@ class SrvExampleTest {
         assertEquals(143856, reader.position());
 
         // ===== tsMARKER — маркеры съёмки =====
-        SrvMarkerParser markerParser = new SrvMarkerParser();
+        MarkerParser markerParser = new MarkerParser();
 
-        List<SrvMarker> markers = markerParser.parse(
+        List<MarkerData> markers = markerParser.parse(
                 reader,
                 header.markerCount(),
                 header.stepCount()
@@ -216,7 +220,7 @@ class SrvExampleTest {
 
         assertEquals(1, markers.size());
 
-        SrvMarker marker = markers.getFirst();
+        MarkerData marker = markers.getFirst();
 
         // Type = 14 — стрелка, остряк.
         assertEquals(14, marker.type());
@@ -637,7 +641,7 @@ class SrvExampleTest {
         // ===== tsGEO_COORD — GNSS-координаты оси пути =====
 
         List<GeoCoordinate> coordinates =
-                vpiDataParser.parseGeoCoordinates(
+                new GeoCoordinateParser().parse(
                         reader,
                         header.vpi().geoCoordCount()
                 );

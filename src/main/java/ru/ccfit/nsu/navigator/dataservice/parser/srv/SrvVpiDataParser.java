@@ -1,18 +1,17 @@
 package ru.ccfit.nsu.navigator.dataservice.parser.srv;
 
 import ru.ccfit.nsu.navigator.dataservice.exception.parsing.SrvParsingException;
-import ru.ccfit.nsu.navigator.dataservice.parser.SrvBinaryReader;
-import ru.ccfit.nsu.navigator.dataservice.parser.common.model.GeoCoordinate;
-import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.track.SrvDefect;
+import ru.ccfit.nsu.navigator.dataservice.parser.common.BinaryReader;
+import ru.ccfit.nsu.navigator.dataservice.parser.common.PicketPositionParser;
+import ru.ccfit.nsu.navigator.dataservice.parser.common.model.PicketPosition;
+import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.vpiD.SrvDefect;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.vpiD.*;
 
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 
 
 public class SrvVpiDataParser {
-    private static final Charset CP1251 =  Charset.forName("windows-1251");
     private static final int SWITCH_SIZE = 18;
     private static final int BUILD_SIZE = 11;
     private static final int FRAGMENT_SIZE = 79;
@@ -23,9 +22,8 @@ public class SrvVpiDataParser {
     private static final int CURVE_SIZE = 20;
     private static final int DEFECT_SIZE = 30;
     private static final int GABARIT_SIZE = 96;
-    private static final int GEO_COORD_SIZE = 24;
 
-    public SrvFragment parseFragment(SrvBinaryReader reader, long fragmentCount)
+    public SrvFragment parseFragment(BinaryReader reader, long fragmentCount)
     {
         // CntFRAG — количество фрагментов в файле.
         if (fragmentCount == 0) { //Данные не от впи вагончика
@@ -39,7 +37,7 @@ public class SrvVpiDataParser {
         }
 
         // tsFRAG — проверяем наличие 79 байт для фрагмента.
-        checkCount(reader, fragmentCount, FRAGMENT_SIZE);
+        reader.requireRecordCount(fragmentCount, FRAGMENT_SIZE, "fragment");
 
         int startStepIndex = reader.readInt(); // STP — начальный шаг фрагмента
 
@@ -55,13 +53,13 @@ public class SrvVpiDataParser {
         int parkCode = reader.readUnsignedByte();
         // Kod_park — код парка; 0 — главный путь или перегон
 
-        String trackNumber = readString(reader, 10);
+        String trackNumber = reader.readFixedString(10);
         // Num_way[10] — номер пути
 
         int picketDirection = reader.readUnsignedByte();
         // Hod — направление относительно пикетажа
 
-        String name = readString(reader, 51);
+        String name = reader.readFixedString(51);
         // Name[51] — название фрагмента
 
         return new SrvFragment(
@@ -81,9 +79,9 @@ public class SrvVpiDataParser {
 
     // CntPOST — количество километровых столбов из tsVPI_H.
     public List<SrvPost> parsePosts(
-            SrvBinaryReader reader, long count
+            BinaryReader reader, long count
     ) {
-        checkCount(reader, count, POST_SIZE);
+        reader.requireRecordCount(count, POST_SIZE, "post");
 
         List<SrvPost> posts = new ArrayList<>();
 
@@ -113,32 +111,12 @@ public class SrvVpiDataParser {
         return posts;
     }
 
-    // Проверяем, что заявленное количество записей
-    // физически помещается в оставшейся части файла.
-    private void checkCount(SrvBinaryReader reader, long count, int recordSize) {
-        if (count < 0 || count > reader.remaining() / recordSize) {
-            throw new SrvParsingException("Invalid VPI record count: " + count);
-        }
-    }
-
-    // Строка фиксированной длины, Windows-1251, до нулевого байта.
-    private String readString(SrvBinaryReader reader, int length) {
-        byte[] bytes = reader.readBytes(length);
-
-        int end = 0;
-        while (end < bytes.length && bytes[end] != 0) {
-            end++;
-        }
-
-        return new String(bytes, 0, end, CP1251).trim();
-    }
-
     public List<SrvSwitch> parseSwitches(
-            SrvBinaryReader reader,
+            BinaryReader reader,
             long count
     ) {
         // CntSWITCH — количество стрелочных переводов.
-        checkCount(reader, count, SWITCH_SIZE);
+        reader.requireRecordCount(count, SWITCH_SIZE, "switch");
 
         List<SrvSwitch> switches = new ArrayList<>();
 
@@ -155,7 +133,7 @@ public class SrvVpiDataParser {
             int lengthM = reader.readUnsignedShort();
             // LenR — реальная длина стрелки, м
 
-            String number = readString(reader, 5);
+            String number = reader.readFixedString(5);
             // Name[5] — номер стрелки
 
             int stationCode = reader.readInt();
@@ -185,11 +163,11 @@ public class SrvVpiDataParser {
     }
 
     public List<SrvBuild> parseBuilds(
-            SrvBinaryReader reader,
+            BinaryReader reader,
             long count
     ) {
         // CntBUILD — количество сооружений.
-        checkCount(reader, count, BUILD_SIZE);
+        reader.requireRecordCount(count, BUILD_SIZE, "build");
 
         List<SrvBuild> builds = new ArrayList<>();
 
@@ -225,11 +203,11 @@ public class SrvVpiDataParser {
 
 
     public List<SrvSpeed> parseSpeeds(
-            SrvBinaryReader reader,
+            BinaryReader reader,
             long count
     ) {
         // CntSPEED — количество участков установленных скоростей.
-        checkCount(reader, count, SPEED_SIZE);
+        reader.requireRecordCount(count, SPEED_SIZE, "speed");
 
         List<SrvSpeed> speeds = new ArrayList<>();
 
@@ -280,11 +258,11 @@ public class SrvVpiDataParser {
 
 
     public List<SrvThread> parseThreads(
-            SrvBinaryReader reader,
+            BinaryReader reader,
             long count
     ) {
         // CntTHREAD — количество участков левой рихтовочной нити.
-        checkCount(reader, count, THREAD_SIZE);
+        reader.requireRecordCount(count, THREAD_SIZE, "thread");
 
         List<SrvThread> threads = new ArrayList<>();
 
@@ -306,11 +284,11 @@ public class SrvVpiDataParser {
 
 
     public List<SrvElevation> parseElevations(
-            SrvBinaryReader reader,
+            BinaryReader reader,
             long count
     ) {
         // CntUROV — количество точек изменения возвышения.
-        checkCount(reader, count, ELEVATION_SIZE);
+        reader.requireRecordCount(count, ELEVATION_SIZE, "elevation");
 
         List<SrvElevation> elevations = new ArrayList<>();
 
@@ -332,11 +310,11 @@ public class SrvVpiDataParser {
 
 
     public List<SrvCurve> parseCurves(
-            SrvBinaryReader reader,
+            BinaryReader reader,
             long count
     ) {
         // CntCURVE — количество точек параметров кривых.
-        checkCount(reader, count, CURVE_SIZE);
+        reader.requireRecordCount(count, CURVE_SIZE, "curve");
 
         List<SrvCurve> curves = new ArrayList<>();
 
@@ -370,11 +348,11 @@ public class SrvVpiDataParser {
 
 
     public List<SrvDefect> parseDefects(
-            SrvBinaryReader reader,
+            BinaryReader reader,
             long count
     ) {
         // CntDEFECT — количество неисправностей из tsVPI_H.
-        checkCount(reader, count, DEFECT_SIZE);
+        reader.requireRecordCount(count, DEFECT_SIZE, "defect");
 
         List<SrvDefect> defects = new ArrayList<>();
 
@@ -406,7 +384,7 @@ public class SrvVpiDataParser {
             int degree = reader.readUnsignedByte();
             // Degree — степень отклонения
 
-            String label = readString(reader, 7);
+            String label = reader.readFixedString(7);
             // Label[7] — обозначение неисправности в Windows-1251
 
             defects.add(new SrvDefect(
@@ -428,12 +406,13 @@ public class SrvVpiDataParser {
 
 
     public List<SrvGabarit> parseGabarits(
-            SrvBinaryReader reader,
+            BinaryReader reader,
             long count
     ) {
         // CntGABARIT — количество записей о габаритах.
-        checkCount(reader, count, GABARIT_SIZE);
+        reader.requireRecordCount(count, GABARIT_SIZE, "gabarit");
 
+        PicketPositionParser picketPositionParser = new PicketPositionParser();
         List<SrvGabarit> gabarits = new ArrayList<>();
 
         for (long i = 0; i < count; i++) {
@@ -444,14 +423,7 @@ public class SrvVpiDataParser {
             // STP — индекс шага
 
             // PKT — положение объекта, структура tsPKT_H.
-            long packedPosition = reader.readUnsignedInt();
-            // Piket:4, KM:24 — пикет и километр в одном числе
-
-            int picket = (int) (packedPosition & 0xF);
-            int kilometer = (int) ((packedPosition >>> 4) & 0xFFFFFF);
-
-            float meter = reader.readFloat();
-            // PKT.M — метры в пределах пикетажа
+            PicketPosition position = picketPositionParser.parse(reader);
 
             // Type:8, Reserv:4, Clearance:2, Intertrack:2.
             int flags = reader.readUnsignedShort();
@@ -476,15 +448,15 @@ public class SrvVpiDataParser {
             short rightRangeMm = reader.readShort();
             // Range[1] — допускаемое смещение пути вправо, мм
 
-            String description = readString(reader, 64);
+            String description = reader.readFixedString(64);
             // Label[64] — описание объекта, Windows-1251
 
             gabarits.add(new SrvGabarit(
                     controlDistanceM,
                     stepIndex,
-                    kilometer,
-                    picket,
-                    meter,
+                    position.kilometer(),
+                    position.picket(),
+                    position.meter(),
                     objectType,
                     reservedFlags,
                     clearanceCode,
@@ -500,35 +472,4 @@ public class SrvVpiDataParser {
 
         return gabarits;
     }
-
-    public List<GeoCoordinate> parseGeoCoordinates(
-            SrvBinaryReader reader,
-            long count
-    ) {
-        // CntGeoCoords — количество GNSS-точек на оси пути.
-        checkCount(reader, count, GEO_COORD_SIZE);
-
-        List<GeoCoordinate> coordinates = new ArrayList<>();
-
-        for (long i = 0; i < count; i++) {
-            double latitude = reader.readDouble();
-            // lat — географическая широта
-
-            double longitude = reader.readDouble();
-            // lon — географическая долгота
-
-            double altitude = reader.readDouble();
-            // alt — высота
-
-            coordinates.add(new GeoCoordinate(
-                    latitude,
-                    longitude,
-                    altitude
-            ));
-        }
-
-        return coordinates;
-    }
-
-
 }

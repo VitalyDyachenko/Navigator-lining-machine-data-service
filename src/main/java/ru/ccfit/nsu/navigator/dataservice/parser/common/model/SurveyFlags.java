@@ -1,6 +1,6 @@
-package ru.ccfit.nsu.navigator.dataservice.parser.srv.model;
+package ru.ccfit.nsu.navigator.dataservice.parser.common.model;
 
-public record SrvSurveyFlags(
+public record SurveyFlags(
         boolean againstPicketage,
         boolean movingBackward,
         int press,

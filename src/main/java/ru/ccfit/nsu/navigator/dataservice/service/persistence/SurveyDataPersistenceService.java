@@ -1,4 +1,3 @@
-
 package ru.ccfit.nsu.navigator.dataservice.service.persistence;
 
 import org.springframework.stereotype.Service;
@@ -6,9 +5,10 @@ import ru.ccfit.nsu.navigator.dataservice.entity.survey.SurveyChannel;
 import ru.ccfit.nsu.navigator.dataservice.entity.survey.SurveyMarker;
 import ru.ccfit.nsu.navigator.dataservice.entity.survey.SurveyRfid;
 import ru.ccfit.nsu.navigator.dataservice.exception.parsing.SrvParsingException;
-import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.*;
-import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.channelInfo.SrvChannelInfo;
-import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.marker.SrvMarker;
+import ru.ccfit.nsu.navigator.dataservice.parser.common.model.ChannelInfo;
+import ru.ccfit.nsu.navigator.dataservice.parser.common.model.marker.MarkerData;
+import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.SrvHeader;
+import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.SrvSurvey;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.rfid.SrvRfid;
 import ru.ccfit.nsu.navigator.dataservice.repository.survey.SurveyChannelRepository;
 import ru.ccfit.nsu.navigator.dataservice.repository.survey.SurveyMarkerRepository;
@@ -40,7 +40,7 @@ public class SurveyDataPersistenceService {
     }
 
     private void saveChannels(Long workId, SrvHeader header, Map<Integer, byte[]> source) {
-        SrvChannelInfo[] info = header.channels();
+        ChannelInfo[] info = header.channels();
         List<SurveyChannel> channels = new ArrayList<>(source.size());
 
         for (Map.Entry<Integer, byte[]> entry : source.entrySet()) {
@@ -50,7 +50,7 @@ public class SurveyDataPersistenceService {
                 throw new SrvParsingException("Invalid channel index: " + index);
             }
 
-            SrvChannelInfo metadata = info[index];
+            ChannelInfo metadata = info[index];
 
             channels.add(new SurveyChannel(
                     workId,
@@ -65,7 +65,7 @@ public class SurveyDataPersistenceService {
         channelRepository.saveAll(channels);
     }
 
-    private void saveMarkers(Long workId, List<SrvMarker> source) {
+    private void saveMarkers(Long workId, List<MarkerData> source) {
         List<SurveyMarker> markers = source.stream()
                 .map(item -> new SurveyMarker(
                         workId,

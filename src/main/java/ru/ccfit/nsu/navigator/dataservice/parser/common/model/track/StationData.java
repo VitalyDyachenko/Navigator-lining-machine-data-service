@@ -1,6 +1,6 @@
-package ru.ccfit.nsu.navigator.dataservice.parser.srv.model.track;
+package ru.ccfit.nsu.navigator.dataservice.parser.common.model.track;
 
-public record SrvStation(
+public record StationData(
         int sourceId,
         int code,
         int departmentId,

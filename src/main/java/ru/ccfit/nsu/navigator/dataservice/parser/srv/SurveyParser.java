@@ -2,9 +2,11 @@
 package ru.ccfit.nsu.navigator.dataservice.parser.srv;
 
 import ru.ccfit.nsu.navigator.dataservice.exception.parsing.SrvParsingException;
-import ru.ccfit.nsu.navigator.dataservice.parser.SrvBinaryReader;
+import ru.ccfit.nsu.navigator.dataservice.parser.common.BinaryReader;
+import ru.ccfit.nsu.navigator.dataservice.parser.common.GeoCoordinateParser;
+import ru.ccfit.nsu.navigator.dataservice.parser.common.MarkerParser;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.*;
-import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.marker.SrvMarker;
+import ru.ccfit.nsu.navigator.dataservice.parser.common.model.marker.MarkerData;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.rfid.SrvRfid;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.vpiH.SrvVpiHeader;
 
@@ -14,7 +16,7 @@ import java.util.Map;
 public class SurveyParser {
 
     public SrvSurvey parse(byte[] fileData) {
-        SrvBinaryReader reader = new SrvBinaryReader(fileData);
+        BinaryReader reader = new BinaryReader(fileData, SrvParsingException::new);
 
         // tsHEADER_SURVEY — заголовок съёмки.
         SrvHeader header = new SrvHeaderParser().parse(reader);
@@ -27,7 +29,7 @@ public class SurveyParser {
                 new SrvChannelDataParser().parse(reader, header);
 
         // tsMARKER — CntMARKER маркеров съёмки.
-        List<SrvMarker> markers = new SrvMarkerParser().parse(
+        List<MarkerData> markers = new MarkerParser().parse(
                 reader,
                 header.markerCount(),
                 header.stepCount()
@@ -52,7 +54,7 @@ public class SurveyParser {
                 vpiParser.parseCurves(reader, vpiHeader.curveCount()),           // Curve
                 vpiParser.parseDefects(reader, vpiHeader.defectCount()),         // Defect
                 vpiParser.parseGabarits(reader, vpiHeader.gabaritCount()),       // Gabarit
-                vpiParser.parseGeoCoordinates(reader, vpiHeader.geoCoordCount()) // GeoCoords
+                new GeoCoordinateParser().parse(reader, vpiHeader.geoCoordCount()) // GeoCoords
         );
 
         if (reader.remaining() != 0) {

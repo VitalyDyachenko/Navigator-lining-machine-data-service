@@ -1,7 +1,7 @@
 package ru.ccfit.nsu.navigator.dataservice.parser.srv;
 
 import ru.ccfit.nsu.navigator.dataservice.exception.parsing.SrvParsingException;
-import ru.ccfit.nsu.navigator.dataservice.parser.SrvBinaryReader;
+import ru.ccfit.nsu.navigator.dataservice.parser.common.BinaryReader;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.SrvHeader;
 
 import java.nio.ByteBuffer;
@@ -16,7 +16,7 @@ public class SrvChannelDataParser {
     // tsDATA.Buff — массивы измерений типа short.
     private static final int BYTES_PER_VALUE = Short.BYTES;
 
-    public Map<Integer, byte[]> parse(SrvBinaryReader reader, SrvHeader header)
+    public Map<Integer, byte[]> parse(BinaryReader reader, SrvHeader header)
     {
         int mask = header.channelMask();    // MaskCH — маска записанных каналов
         long steps = header.stepCount();    // CntSTEP — число измерений на канал

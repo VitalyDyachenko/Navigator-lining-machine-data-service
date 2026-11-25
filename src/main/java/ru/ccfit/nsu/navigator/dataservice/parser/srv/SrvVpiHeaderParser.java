@@ -1,13 +1,13 @@
 
 package ru.ccfit.nsu.navigator.dataservice.parser.srv;
 
-import ru.ccfit.nsu.navigator.dataservice.parser.SrvBinaryReader;
+import ru.ccfit.nsu.navigator.dataservice.parser.common.BinaryReader;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.vpiH.SrvTripId;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.vpiH.SrvVpiHeader;
 
 public class SrvVpiHeaderParser {
 
-    public SrvVpiHeader parse(SrvBinaryReader reader) {
+    public SrvVpiHeader parse(BinaryReader reader) {
         // ID_Trip — идентификатор проезда.
         SrvTripId tripId = parseTripId(reader);
 
@@ -43,7 +43,7 @@ public class SrvVpiHeaderParser {
     }
 
     // tsID_TRIP — 64-битный идентификатор проезда.
-    private SrvTripId parseTripId(SrvBinaryReader reader) {
+    private SrvTripId parseTripId(BinaryReader reader) {
         long raw = reader.readLong();
 
         return new SrvTripId(

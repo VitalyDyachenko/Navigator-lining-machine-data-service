@@ -1,6 +1,6 @@
-package ru.ccfit.nsu.navigator.dataservice.parser.srv.model.track;
+package ru.ccfit.nsu.navigator.dataservice.parser.common.model.track;
 
-public record SrvDirection(
+public record DirectionData(
         int sourceId,
         short code,
         short magistralCode,

@@ -5,9 +5,8 @@ import org.springframework.stereotype.Service;
 import ru.ccfit.nsu.navigator.dataservice.entity.survey.vpi.*;
 import ru.ccfit.nsu.navigator.dataservice.exception.parsing.SrvParsingException;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.SrvVpiData;
-import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.track.SrvDefect;
+import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.vpiD.SrvDefect;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.vpiD.*;
-import ru.ccfit.nsu.navigator.dataservice.repository.work.GeoCoordinateRepository;
 import ru.ccfit.nsu.navigator.dataservice.repository.survey.vpi.*;
 
 import java.util.List;

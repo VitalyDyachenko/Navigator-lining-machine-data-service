@@ -1,6 +1,6 @@
-package ru.ccfit.nsu.navigator.dataservice.parser.srv.model;
+package ru.ccfit.nsu.navigator.dataservice.parser.common.model;
 
-public record SrvMachine(
+public record MachineData(
         int rawType,
         int machineType,
         String name,

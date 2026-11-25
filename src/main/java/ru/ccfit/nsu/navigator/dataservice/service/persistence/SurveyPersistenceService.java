@@ -1,4 +1,3 @@
-
 package ru.ccfit.nsu.navigator.dataservice.service.persistence;
 
 import org.springframework.stereotype.Service;
@@ -8,61 +7,57 @@ import ru.ccfit.nsu.navigator.dataservice.entity.railway.*;
 import ru.ccfit.nsu.navigator.dataservice.entity.survey.Survey;
 import ru.ccfit.nsu.navigator.dataservice.entity.work.Work;
 import ru.ccfit.nsu.navigator.dataservice.exception.parsing.SrvParsingException;
-import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.*;
-import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.track.SrvTrack;
-import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.vpiH.*;
-import ru.ccfit.nsu.navigator.dataservice.repository.machine.MachineParamsRepository;
-import ru.ccfit.nsu.navigator.dataservice.repository.machine.MachineRepository;
+import ru.ccfit.nsu.navigator.dataservice.parser.common.model.MachineData;
+import ru.ccfit.nsu.navigator.dataservice.parser.common.model.SurveyFlags;
+import ru.ccfit.nsu.navigator.dataservice.parser.common.model.track.StationPositionData;
+import ru.ccfit.nsu.navigator.dataservice.parser.common.model.track.TrackData;
+import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.SrvHeader;
+import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.SrvSurvey;
+import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.vpiH.SrvTripId;
+import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.vpiH.SrvVpiHeader;
+import ru.ccfit.nsu.navigator.dataservice.repository.railway.StationPositionRepository;
 import ru.ccfit.nsu.navigator.dataservice.repository.survey.SurveyRepository;
 import ru.ccfit.nsu.navigator.dataservice.repository.work.WorkRepository;
-import ru.ccfit.nsu.navigator.dataservice.repository.railway.StationPositionRepository;
-import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.track.SrvStationPosition;
 
 import java.util.List;
 
 @Service
 public class SurveyPersistenceService {
 
-    private final MachineRepository machineRepository;
-    private final MachineParamsRepository machineParamsRepository;
     private final WorkRepository workRepository;
     private final SurveyRepository surveyRepository;
+    private final MachinePersistenceService machinePersistenceService;
     private final SurveyVpiPersistenceService vpiPersistenceService;
     private final SurveyDataPersistenceService dataPersistenceService;
     private final RailwayPersistenceService railwayPersistenceService;
     private final StationPositionRepository stationPositionRepository;
 
-
     public SurveyPersistenceService(
-            MachineRepository machineRepository,
-            MachineParamsRepository machineParamsRepository,
             WorkRepository workRepository,
             SurveyRepository surveyRepository,
+            MachinePersistenceService machinePersistenceService,
             SurveyVpiPersistenceService vpiPersistenceService,
             SurveyDataPersistenceService dataPersistenceService,
             RailwayPersistenceService railwayPersistenceService,
             StationPositionRepository stationPositionRepository
     ) {
-        this.machineRepository = machineRepository;
-        this.machineParamsRepository = machineParamsRepository;
         this.workRepository = workRepository;
         this.surveyRepository = surveyRepository;
+        this.machinePersistenceService = machinePersistenceService;
         this.vpiPersistenceService = vpiPersistenceService;
         this.dataPersistenceService = dataPersistenceService;
         this.railwayPersistenceService = railwayPersistenceService;
         this.stationPositionRepository = stationPositionRepository;
     }
 
-
     public Long save(SrvSurvey source) {
         SrvHeader header = source.header();
-        SrvMachine sourceMachine = header.machine();
+        MachineData sourceMachine = header.machine();
 
-        Machine machine = getOrCreateMachine(sourceMachine);
-        MachineParams params = getOrCreateMachineParams(machine, sourceMachine);
+        Machine machine = machinePersistenceService.getOrCreateMachine(sourceMachine);
+        MachineParams params = machinePersistenceService.getOrCreateMachineParams(machine, sourceMachine);
 
-
-        SrvTrack track = header.track();
+        TrackData track = header.track();
         validateTrackReferences(track);
 
         Railway railway = railwayPersistenceService.getOrCreateRailway(track.railway());
@@ -95,12 +90,10 @@ public class SurveyPersistenceService {
         vpiPersistenceService.save(work.getId(), source.vpiData());
         dataPersistenceService.save(work.getId(), source);
 
-
         return work.getId();
     }
 
-
-    private void validateTrackReferences(SrvTrack track) {
+    private void validateTrackReferences(TrackData track) {
         int directionId = track.direction().sourceId();
 
         if ((track.mainTrack().directionSourceId() != 0
@@ -128,7 +121,7 @@ public class SurveyPersistenceService {
     }
 
     private void validateStationPositionReferences(
-            SrvStationPosition position,
+            StationPositionData position,
             int expectedStationSourceId,
             int expectedMainTrackSourceId,
             String positionName
@@ -146,55 +139,9 @@ public class SurveyPersistenceService {
         }
     }
 
-
-
-    private Machine getOrCreateMachine(SrvMachine source) {
-        if (source.machineType() < 0 || source.machineType() > 4) {
-            throw new SrvParsingException("Unsupported machine type: " + source.machineType());
-        }
-
-        short typeId = (short) source.machineType();
-
-        machineRepository.insertIfMissing(
-                source.number(),
-                source.name(),
-                typeId
-        );
-
-        return machineRepository.findByNumberAndNameAndTypeId(
-                source.number(),
-                source.name(),
-                typeId
-        ).orElseThrow(() -> new IllegalStateException(
-                "Machine not found after insertIfMissing"
-        ));
-    }
-
-
-    private MachineParams getOrCreateMachineParams(Machine machine, SrvMachine source) {
-        MachineParams params = new MachineParams(
-                machine,
-                source.continuousCorrection(),
-                source.profileEnabled(),
-                source.planeSatellite(),
-                source.tampingSleepers(),
-                source.alignmentArms(),
-                source.levelingArms(),
-                source.trolleyArms(),
-                source.gaugeWidth()
-        );
-
-        return machineParamsRepository.findAllByMachine_Id(machine.getId())
-                .stream()
-                .filter(existing -> existing.hasSameSettings(params))
-                .findFirst()
-                .orElseGet(() -> machineParamsRepository.save(params));
-    }
-
-
     private Work saveWork(SrvHeader header, Machine machine,
                           MainTrack mainTrack, Peregon peregon) {
-        SrvTrack track = header.track();
+        TrackData track = header.track();
         Work work = Work.createPending();
 
         work.setMachine(machine);
@@ -223,7 +170,7 @@ public class SurveyPersistenceService {
         surveyRepository.saveAndFlush(survey);
     }
 
-    private void setSurveyFlags(Survey survey, SrvSurveyFlags flags) {
+    private void setSurveyFlags(Survey survey, SurveyFlags flags) {
         int press = flags.press();
 
         if (press == 2) {
@@ -245,8 +192,7 @@ public class SurveyPersistenceService {
     private void setSurveyTrip(Survey survey, SrvVpiHeader vpi) {
         SrvTripId trip = vpi.tripId();
 
-        // Если данные проезда ВПИ отсутствуют,
-        // не заполняем поля survey фиктивными нулями.
+        // Пропуск заполнения полей проезда ВПИ при отсутствии данных
         if (vpi.fragmentCount() == 0
                 && vpi.startStep() == 0
                 && trip.tripNumber() == 0
@@ -273,7 +219,7 @@ public class SurveyPersistenceService {
 
     private void saveStationPositions(
             Long workId,
-            SrvTrack track,
+            TrackData track,
             Station firstStation,
             Station secondStation
     ) {
@@ -300,7 +246,7 @@ public class SurveyPersistenceService {
             Long workId,
             short order,
             Station station,
-            SrvStationPosition source
+            StationPositionData source
     ) {
         return new StationPosition(
                 workId,
@@ -315,5 +261,4 @@ public class SurveyPersistenceService {
                 source.endM()
         );
     }
-
 }

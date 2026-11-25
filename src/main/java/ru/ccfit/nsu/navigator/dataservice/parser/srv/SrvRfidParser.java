@@ -1,7 +1,7 @@
 package ru.ccfit.nsu.navigator.dataservice.parser.srv;
 
 
-import ru.ccfit.nsu.navigator.dataservice.parser.SrvBinaryReader;
+import ru.ccfit.nsu.navigator.dataservice.parser.common.BinaryReader;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.rfid.SrvRfid;
 
 import java.util.ArrayList;
@@ -10,7 +10,7 @@ import java.util.List;
 public class SrvRfidParser {
 
     public List<SrvRfid> parse(
-            SrvBinaryReader reader,
+            BinaryReader reader,
             int rfidCount
     ) {
         // CntRFID — количество RFID-меток из заголовка.
