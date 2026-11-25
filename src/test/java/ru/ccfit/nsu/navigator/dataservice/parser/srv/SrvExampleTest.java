@@ -2,6 +2,7 @@ package ru.ccfit.nsu.navigator.dataservice.parser.srv;
 
 import org.junit.jupiter.api.Test;
 import ru.ccfit.nsu.navigator.dataservice.parser.SrvBinaryReader;
+import ru.ccfit.nsu.navigator.dataservice.parser.common.model.GeoCoordinate;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.SrvHeader;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.SrvMachine;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.SrvSurveyFlags;
@@ -635,7 +636,7 @@ class SrvExampleTest {
 
         // ===== tsGEO_COORD — GNSS-координаты оси пути =====
 
-        List<SrvGeoCoordinate> coordinates =
+        List<GeoCoordinate> coordinates =
                 vpiDataParser.parseGeoCoordinates(
                         reader,
                         header.vpi().geoCoordCount()
@@ -644,21 +645,21 @@ class SrvExampleTest {
         assertEquals(11902, coordinates.size());
 
         // Первая GNSS-точка.
-        SrvGeoCoordinate first_geo = coordinates.get(0);
+        GeoCoordinate first_geo = coordinates.get(0);
 
         assertEquals(55.11728140147731, first_geo.latitude());
         assertEquals(83.00798073517092, first_geo.longitude());
         assertEquals(0.0, first_geo.altitude());
 
         // Вторая GNSS-точка.
-        SrvGeoCoordinate second = coordinates.get(1);
+        GeoCoordinate second = coordinates.get(1);
 
         assertEquals(55.11728770953188, second.latitude());
         assertEquals(83.0079863212119, second.longitude());
         assertEquals(0.0, second.altitude());
 
         // Последняя GNSS-точка.
-        SrvGeoCoordinate last_geo = coordinates.get(11901);
+        GeoCoordinate last_geo = coordinates.get(11901);
 
         assertEquals(55.152011147838394, last_geo.latitude());
         assertEquals(83.10564274661138, last_geo.longitude());

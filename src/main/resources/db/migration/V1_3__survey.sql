@@ -33,20 +33,6 @@ CREATE TABLE survey
     -- ======================
 );
 
-CREATE TABLE geo_coord
-(
-    id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-
-    work_id BIGINT NOT NULL REFERENCES survey(work_id),
-    point_index INTEGER NOT NULL,
-
-    latitude DOUBLE PRECISION NOT NULL,
-    longitude DOUBLE PRECISION NOT NULL,
-    altitude DOUBLE PRECISION NOT NULL,
-
-    CONSTRAINT uq_geo_point UNIQUE (work_id, point_index)
-);
-
 CREATE TABLE survey_fragment
 (
     work_id BIGINT PRIMARY KEY REFERENCES survey(work_id),

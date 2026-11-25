@@ -52,3 +52,19 @@ CREATE TABLE station_position
 
     PRIMARY KEY (work_id, station_order)
 );
+
+CREATE TABLE geo_coord
+(
+    id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+
+    work_id BIGINT NOT NULL REFERENCES work(id),
+    is_project BOOLEAN NOT NULL, -- true - prm, false - srv
+    point_index INTEGER NOT NULL,
+
+    latitude DOUBLE PRECISION NOT NULL,
+    longitude DOUBLE PRECISION NOT NULL,
+    altitude DOUBLE PRECISION NOT NULL,
+
+    CONSTRAINT uq_geo_point UNIQUE (work_id, is_project, point_index)
+);
+

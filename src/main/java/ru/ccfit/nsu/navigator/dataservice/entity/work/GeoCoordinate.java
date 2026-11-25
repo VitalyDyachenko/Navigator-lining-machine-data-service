@@ -1,5 +1,5 @@
 
-package ru.ccfit.nsu.navigator.dataservice.entity.survey;
+package ru.ccfit.nsu.navigator.dataservice.entity.work;
 
 import jakarta.persistence.*;
 
@@ -26,15 +26,19 @@ public class GeoCoordinate {
     @Column(name = "altitude", nullable = false)
     private double altitude;
 
+    @Column(name = "is_project", nullable = false)
+    private boolean isProject;
+
     protected GeoCoordinate() {
     }
 
-    public GeoCoordinate(Long workId, int pointIndex, double latitude,
+    public GeoCoordinate(Long workId, boolean isProject, int pointIndex, double latitude,
                          double longitude, double altitude) {
         this.workId = workId;
         this.pointIndex = pointIndex;
         this.latitude = latitude;
         this.longitude = longitude;
         this.altitude = altitude;
+        this.isProject = isProject;
     }
 }

@@ -2,6 +2,7 @@ package ru.ccfit.nsu.navigator.dataservice.parser.srv;
 
 import ru.ccfit.nsu.navigator.dataservice.exception.parsing.SrvParsingException;
 import ru.ccfit.nsu.navigator.dataservice.parser.SrvBinaryReader;
+import ru.ccfit.nsu.navigator.dataservice.parser.common.model.GeoCoordinate;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.track.SrvDefect;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.vpiD.*;
 
@@ -500,14 +501,14 @@ public class SrvVpiDataParser {
         return gabarits;
     }
 
-    public List<SrvGeoCoordinate> parseGeoCoordinates(
+    public List<GeoCoordinate> parseGeoCoordinates(
             SrvBinaryReader reader,
             long count
     ) {
         // CntGeoCoords — количество GNSS-точек на оси пути.
         checkCount(reader, count, GEO_COORD_SIZE);
 
-        List<SrvGeoCoordinate> coordinates = new ArrayList<>();
+        List<GeoCoordinate> coordinates = new ArrayList<>();
 
         for (long i = 0; i < count; i++) {
             double latitude = reader.readDouble();
@@ -519,7 +520,7 @@ public class SrvVpiDataParser {
             double altitude = reader.readDouble();
             // alt — высота
 
-            coordinates.add(new SrvGeoCoordinate(
+            coordinates.add(new GeoCoordinate(
                     latitude,
                     longitude,
                     altitude

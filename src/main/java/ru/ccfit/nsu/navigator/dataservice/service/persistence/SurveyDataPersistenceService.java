@@ -1,5 +1,5 @@
 
-package ru.ccfit.nsu.navigator.dataservice.service;
+package ru.ccfit.nsu.navigator.dataservice.service.persistence;
 
 import org.springframework.stereotype.Service;
 import ru.ccfit.nsu.navigator.dataservice.entity.survey.SurveyChannel;

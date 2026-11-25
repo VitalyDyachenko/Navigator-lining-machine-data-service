@@ -1,17 +1,15 @@
 
-package ru.ccfit.nsu.navigator.dataservice.service;
+package ru.ccfit.nsu.navigator.dataservice.service.persistence;
 
 import org.springframework.stereotype.Service;
-import ru.ccfit.nsu.navigator.dataservice.entity.survey.GeoCoordinate;
 import ru.ccfit.nsu.navigator.dataservice.entity.survey.vpi.*;
 import ru.ccfit.nsu.navigator.dataservice.exception.parsing.SrvParsingException;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.SrvVpiData;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.track.SrvDefect;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.vpiD.*;
-import ru.ccfit.nsu.navigator.dataservice.repository.survey.GeoCoordinateRepository;
+import ru.ccfit.nsu.navigator.dataservice.repository.work.GeoCoordinateRepository;
 import ru.ccfit.nsu.navigator.dataservice.repository.survey.vpi.*;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -27,7 +25,7 @@ public class SurveyVpiPersistenceService {
     private final SurveyCurveRepository curveRepository;
     private final SurveyDefectRepository defectRepository;
     private final SurveyGabaritRepository gabaritRepository;
-    private final GeoCoordinateRepository geoCoordinateRepository;
+    private final GeoCoordinatePersistenceService geoCoordinatePersistenceService;
 
     public SurveyVpiPersistenceService(
             SurveyFragmentRepository fragmentRepository,
@@ -40,7 +38,7 @@ public class SurveyVpiPersistenceService {
             SurveyCurveRepository curveRepository,
             SurveyDefectRepository defectRepository,
             SurveyGabaritRepository gabaritRepository,
-            GeoCoordinateRepository geoCoordinateRepository)
+            GeoCoordinatePersistenceService geoCoordinatePersistenceService)
     {
         this.fragmentRepository = fragmentRepository;
         this.postRepository = postRepository;
@@ -52,7 +50,7 @@ public class SurveyVpiPersistenceService {
         this.curveRepository = curveRepository;
         this.defectRepository = defectRepository;
         this.gabaritRepository = gabaritRepository;
-        this.geoCoordinateRepository = geoCoordinateRepository;
+        this.geoCoordinatePersistenceService = geoCoordinatePersistenceService;
     }
 
 
@@ -70,7 +68,7 @@ public class SurveyVpiPersistenceService {
         saveCurves(workId, vpi.curves());
         saveDefects(workId, vpi.defects());
         saveGabarits(workId, vpi.gabarits());
-        saveGeoCoordinates(workId, vpi.geoCoordinates());
+        geoCoordinatePersistenceService.save(workId, false, vpi.geoCoordinates());
     }
 
 
@@ -253,24 +251,4 @@ public class SurveyVpiPersistenceService {
 
         gabaritRepository.saveAll(gabarits);
     }
-
-
-    private void saveGeoCoordinates(Long workId, List<SrvGeoCoordinate> source) {
-        List<GeoCoordinate> coordinates = new ArrayList<>(source.size());
-
-        for (int i = 0; i < source.size(); i++) {
-            SrvGeoCoordinate item = source.get(i);
-
-            coordinates.add(new GeoCoordinate(
-                    workId,
-                    i,
-                    item.latitude(),
-                    item.longitude(),
-                    item.altitude()
-            ));
-        }
-
-        geoCoordinateRepository.saveAll(coordinates);
-    }
-
 }
