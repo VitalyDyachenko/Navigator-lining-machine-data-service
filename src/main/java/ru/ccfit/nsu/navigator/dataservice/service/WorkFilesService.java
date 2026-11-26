@@ -21,13 +21,25 @@ import ru.ccfit.nsu.navigator.dataservice.service.persistence.SurveyPersistenceS
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 @Service
 public class WorkFilesService {
+    private static final int SIGNATURE_LENGTH = 6;
+    private static final ExpectedFileSpec SURVEY_SPEC = new ExpectedFileSpec("surveyFile", ".srv", "NavSRV");
+    private static final ExpectedFileSpec CALCULATION_SPEC = new ExpectedFileSpec("calculationFile", ".prm", "NavPRM");
+    private static final ExpectedFileSpec WORK_SPEC = new ExpectedFileSpec("workFile", ".crm", "NavCRM");
+    private static final Set<String> KNOWN_SIGNATURES = Set.of(
+            SURVEY_SPEC.signature(),
+            CALCULATION_SPEC.signature(),
+            WORK_SPEC.signature()
+    );
+
     private final WorkFilesRepository filesRepository;
     private final SurveyPersistenceService surveyPersistenceService;
     private final CalculationPersistenceService calculationPersistenceService;
@@ -49,11 +61,21 @@ public class WorkFilesService {
     public Long saveFiles(
             MultipartFile surveyFile,
             MultipartFile calculationFile,
-            MultipartFile workFile
+            MultipartFile correctionFile
     ) throws IOException {
+        // Предварительная проверка расширений и пустых файлов до чтения содержимого
+        validateFileMetadata(surveyFile, SURVEY_SPEC);
+        validateFileMetadata(calculationFile, CALCULATION_SPEC);
+        validateFileMetadata(correctionFile, WORK_SPEC);
+
         byte[] surveyBytes = surveyFile.getBytes();
         byte[] calculationBytes = calculationFile.getBytes();
-        byte[] workBytes = workFile.getBytes();
+        byte[] workBytes = correctionFile.getBytes();
+
+        // Отсечение файлов с чужой известной сигнатурой до запуска парсеров
+        validateKnownSignature(surveyBytes, SURVEY_SPEC);
+        validateKnownSignature(calculationBytes, CALCULATION_SPEC);
+        validateKnownSignature(workBytes, WORK_SPEC);
 
         SrvSurvey survey = new SurveyParser().parse(surveyBytes);
         PrmCalculation calculation = new CalculationParser().parse(calculationBytes);
@@ -67,11 +89,45 @@ public class WorkFilesService {
                 workId,
                 surveyFile.getOriginalFilename(), surveyBytes,
                 calculationFile.getOriginalFilename(), calculationBytes,
-                workFile.getOriginalFilename(), workBytes
+                correctionFile.getOriginalFilename(), workBytes
         );
 
         filesRepository.save(files);
         return workId;
+    }
+
+    // Проверка непустоты файла и соответствия расширения
+    private void validateFileMetadata(MultipartFile file, ExpectedFileSpec spec) {
+        if (file == null || file.isEmpty()) {
+            throw InvalidFileTypeException.emptyFile(spec.partName(), spec.extension());
+        }
+
+        String originalFilename = file.getOriginalFilename();
+        if (originalFilename == null || originalFilename.isBlank()) {
+            throw InvalidFileTypeException.invalidExtension(spec.partName(), spec.extension(), "");
+        }
+
+        String lowerFilename = originalFilename.toLowerCase(Locale.ROOT);
+        if (!lowerFilename.endsWith(spec.extension())) {
+            throw InvalidFileTypeException.invalidExtension(spec.partName(), spec.extension(), originalFilename);
+        }
+    }
+
+    // Проверка первых байт на наличие известной сигнатуры другого формата
+    private void validateKnownSignature(byte[] bytes, ExpectedFileSpec spec) {
+        if (bytes.length < SIGNATURE_LENGTH) {
+            return;
+        }
+
+        String actualSignature = new String(bytes, 0, SIGNATURE_LENGTH, StandardCharsets.US_ASCII);
+        if (KNOWN_SIGNATURES.contains(actualSignature) && !actualSignature.equals(spec.signature())) {
+            throw InvalidFileTypeException.unexpectedSignature(
+                    spec.partName(),
+                    spec.extension(),
+                    spec.signature(),
+                    actualSignature
+            );
+        }
     }
 
     @Transactional(readOnly = true)
@@ -141,5 +197,8 @@ public class WorkFilesService {
         zip.putNextEntry(new ZipEntry(entryName));
         zip.write(content);
         zip.closeEntry();
+    }
+
+    private record ExpectedFileSpec(String partName, String extension, String signature) {
     }
 }

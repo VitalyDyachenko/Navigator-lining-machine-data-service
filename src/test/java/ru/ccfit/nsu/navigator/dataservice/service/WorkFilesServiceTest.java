@@ -7,6 +7,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockMultipartFile;
 import ru.ccfit.nsu.navigator.dataservice.entity.work.WorkFiles;
+import ru.ccfit.nsu.navigator.dataservice.exception.InvalidFileTypeException;
 import ru.ccfit.nsu.navigator.dataservice.exception.parsing.CrmParsingException;
 import ru.ccfit.nsu.navigator.dataservice.exception.parsing.PrmParsingException;
 import ru.ccfit.nsu.navigator.dataservice.parser.crm.model.CrmCorrection;
@@ -105,5 +106,65 @@ class WorkFilesServiceTest {
 			}
 			return new MockMultipartFile(partName, filename, "application/octet-stream", input.readAllBytes());
 		}
+	}
+
+	@Test
+	void shouldAcceptUppercaseExtensions() throws Exception {
+		MockMultipartFile srvFile = loadMultipart("surveyFile", "SRV2.SRV", "/srv/srv2.srv");
+		MockMultipartFile prmFile = loadMultipart("calculationFile", "PRM2.PRM", "/prm/prm2.prm");
+		MockMultipartFile crmFile = loadMultipart("workFile", "CRM2.CRM", "/crm/crm2.crm");
+
+		when(surveyPersistenceService.save(any(SrvSurvey.class))).thenReturn(99L);
+
+		Long workId = service.saveFiles(srvFile, prmFile, crmFile);
+
+		assertEquals(99L, workId);
+	}
+
+	@Test
+	void shouldRejectWrongFileExtensionWithInvalidFileTypeException() throws Exception {
+		MockMultipartFile wrongSrv = loadMultipart("surveyFile", "crm2.crm", "/crm/crm2.crm");
+		MockMultipartFile prmFile = loadMultipart("calculationFile", "prm2.prm", "/prm/prm2.prm");
+		MockMultipartFile crmFile = loadMultipart("workFile", "crm2.crm", "/crm/crm2.crm");
+
+		assertThrows(InvalidFileTypeException.class, () -> service.saveFiles(wrongSrv, prmFile, crmFile));
+		verifyNoInteractions(
+				surveyPersistenceService,
+				calculationPersistenceService,
+				correctionPersistenceService,
+				filesRepository
+		);
+	}
+
+	@Test
+	void shouldRejectForeignKnownSignatureEvenWithValidExtension() throws Exception {
+		MockMultipartFile spoofedSrv = loadMultipart("surveyFile", "fake.srv", "/crm/crm2.crm");
+		MockMultipartFile prmFile = loadMultipart("calculationFile", "prm2.prm", "/prm/prm2.prm");
+		MockMultipartFile crmFile = loadMultipart("workFile", "crm2.crm", "/crm/crm2.crm");
+
+		assertThrows(InvalidFileTypeException.class, () -> service.saveFiles(spoofedSrv, prmFile, crmFile));
+		verifyNoInteractions(
+				surveyPersistenceService,
+				calculationPersistenceService,
+				correctionPersistenceService,
+				filesRepository
+		);
+	}
+
+	@Test
+	void shouldRejectEmptyFileWithInvalidFileTypeException() throws Exception {
+		MockMultipartFile emptySrv = new MockMultipartFile(
+				"surveyFile", "empty.srv", "application/octet-stream", new byte[0]
+		);
+		MockMultipartFile prmFile = loadMultipart("calculationFile", "prm2.prm", "/prm/prm2.prm");
+		MockMultipartFile crmFile = loadMultipart("workFile", "crm2.crm", "/crm/crm2.crm");
+
+		assertThrows(InvalidFileTypeException.class, () -> service.saveFiles(emptySrv, prmFile, crmFile));
+		verifyNoInteractions(
+				surveyPersistenceService,
+				calculationPersistenceService,
+				correctionPersistenceService,
+				filesRepository
+		);
 	}
 }

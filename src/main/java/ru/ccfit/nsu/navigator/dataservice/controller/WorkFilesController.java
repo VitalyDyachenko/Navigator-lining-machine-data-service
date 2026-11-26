@@ -37,10 +37,10 @@ public class WorkFilesController {
             MultipartFile surveyFile,
             @RequestParam("calculationFile")
             MultipartFile calculationFile,
-            @RequestParam("workFile")
-            MultipartFile workFile
+            @RequestParam("correctionFile")
+            MultipartFile correctionFile
     ) throws IOException {
-        Long id = service.saveFiles(surveyFile, calculationFile,workFile);
+        Long id = service.saveFiles(surveyFile, calculationFile,correctionFile);
         return ResponseEntity.ok(new UploadResponse(id));
     }
 
