@@ -1,16 +1,22 @@
 package ru.ccfit.nsu.navigator.dataservice.service;
 
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import ru.ccfit.nsu.navigator.dataservice.dto.DownloadFileResponse;
 import ru.ccfit.nsu.navigator.dataservice.dto.WorkFilesResponse;
 import ru.ccfit.nsu.navigator.dataservice.entity.work.WorkFiles;
 import ru.ccfit.nsu.navigator.dataservice.exception.InvalidFileTypeException;
 import ru.ccfit.nsu.navigator.dataservice.exception.WorkNotFoundException;
+import ru.ccfit.nsu.navigator.dataservice.parser.crm.CorrectionParser;
+import ru.ccfit.nsu.navigator.dataservice.parser.crm.model.CrmCorrection;
+import ru.ccfit.nsu.navigator.dataservice.parser.prm.CalculationParser;
+import ru.ccfit.nsu.navigator.dataservice.parser.prm.model.PrmCalculation;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.SurveyParser;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.model.SrvSurvey;
 import ru.ccfit.nsu.navigator.dataservice.repository.work.WorkFilesRepository;
+import ru.ccfit.nsu.navigator.dataservice.service.persistence.CalculationPersistenceService;
+import ru.ccfit.nsu.navigator.dataservice.service.persistence.CorrectionPersistenceService;
 import ru.ccfit.nsu.navigator.dataservice.service.persistence.SurveyPersistenceService;
 
 import java.io.ByteArrayOutputStream;
@@ -24,24 +30,38 @@ import java.util.zip.ZipOutputStream;
 public class WorkFilesService {
     private final WorkFilesRepository filesRepository;
     private final SurveyPersistenceService surveyPersistenceService;
+    private final CalculationPersistenceService calculationPersistenceService;
+    private final CorrectionPersistenceService correctionPersistenceService;
 
-    public WorkFilesService(WorkFilesRepository filesRepository,
-                            SurveyPersistenceService surveyPersistenceService)
-    {
+    public WorkFilesService(
+            WorkFilesRepository filesRepository,
+            SurveyPersistenceService surveyPersistenceService,
+            CalculationPersistenceService calculationPersistenceService,
+            CorrectionPersistenceService correctionPersistenceService
+    ) {
         this.filesRepository = filesRepository;
         this.surveyPersistenceService = surveyPersistenceService;
+        this.calculationPersistenceService = calculationPersistenceService;
+        this.correctionPersistenceService = correctionPersistenceService;
     }
 
     @Transactional
-    public Long saveFiles(MultipartFile surveyFile, MultipartFile calculationFile,
-                          MultipartFile workFile) throws IOException
-    {
+    public Long saveFiles(
+            MultipartFile surveyFile,
+            MultipartFile calculationFile,
+            MultipartFile workFile
+    ) throws IOException {
         byte[] surveyBytes = surveyFile.getBytes();
         byte[] calculationBytes = calculationFile.getBytes();
         byte[] workBytes = workFile.getBytes();
 
         SrvSurvey survey = new SurveyParser().parse(surveyBytes);
+        PrmCalculation calculation = new CalculationParser().parse(calculationBytes);
+        CrmCorrection correction = new CorrectionParser().parse(workBytes);
+
         Long workId = surveyPersistenceService.save(survey);
+        calculationPersistenceService.save(workId, survey, calculation);
+        correctionPersistenceService.save(workId, survey, correction);
 
         WorkFiles files = new WorkFiles(
                 workId,

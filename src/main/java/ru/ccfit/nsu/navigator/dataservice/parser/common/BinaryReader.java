@@ -68,6 +68,11 @@ public final class BinaryReader {
         }
     }
 
+    public byte readByte() {
+        requireBytes(Byte.BYTES);
+        return buffer.get();
+    }
+
     public int readUnsignedByte() {
         requireBytes(Byte.BYTES);
         return Byte.toUnsignedInt(buffer.get());

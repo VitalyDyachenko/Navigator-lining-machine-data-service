@@ -24,7 +24,12 @@ public class TimeParser {
 		return decode(reader, offset, packedTime);
 	}
 
-	private LocalDateTime decode(BinaryReader reader, int offset, long packedTime) {
+	// Безопасное декодирование упакованного значения tsHTIME с возвратом null при ошибке календаря
+	public LocalDateTime tryDecode(long packedTime) {
+		if (packedTime == 0L) {
+			return null;
+		}
+
 		int year = (int) (packedTime & 0xFFF);
 		int month = (int) ((packedTime >>> 12) & 0xF);
 		int day = (int) ((packedTime >>> 16) & 0x1F);
@@ -34,7 +39,15 @@ public class TimeParser {
 		try {
 			return LocalDateTime.of(year, month, day, hours, minutes);
 		} catch (DateTimeException e) {
+			return null;
+		}
+	}
+
+	private LocalDateTime decode(BinaryReader reader, int offset, long packedTime) {
+		LocalDateTime decoded = tryDecode(packedTime);
+		if (decoded == null) {
 			throw reader.fail("Invalid date-time at offset " + offset);
 		}
+		return decoded;
 	}
 }
