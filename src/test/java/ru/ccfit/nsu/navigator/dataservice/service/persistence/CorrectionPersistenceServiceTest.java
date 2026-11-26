@@ -15,6 +15,8 @@ import ru.ccfit.nsu.navigator.dataservice.parser.common.model.MachineData;
 import ru.ccfit.nsu.navigator.dataservice.parser.common.model.PicketPosition;
 import ru.ccfit.nsu.navigator.dataservice.parser.common.model.SurveyFlags;
 import ru.ccfit.nsu.navigator.dataservice.parser.common.model.marker.MarkerData;
+import ru.ccfit.nsu.navigator.dataservice.parser.common.model.track.TrackData;
+import ru.ccfit.nsu.navigator.dataservice.parser.common.model.track.TrackPosition;
 import ru.ccfit.nsu.navigator.dataservice.parser.crm.CorrectionParser;
 import ru.ccfit.nsu.navigator.dataservice.parser.crm.model.*;
 import ru.ccfit.nsu.navigator.dataservice.parser.srv.SurveyParser;
@@ -97,7 +99,16 @@ class CorrectionPersistenceServiceTest {
 
 		service.save(10L, survey, correction);
 
-		verify(correctionRepository).saveAndFlush(any(Correction.class));
+		ArgumentCaptor<Correction> correctionCaptor = ArgumentCaptor.forClass(Correction.class);
+		verify(correctionRepository).saveAndFlush(correctionCaptor.capture());
+		Correction savedCorrection = correctionCaptor.getValue();
+		assertEquals(157, savedCorrection.getStartKm());
+		assertEquals((short) 22, savedCorrection.getStartM());
+		assertEquals((short) 0, savedCorrection.getStartMm());
+		assertEquals(158, savedCorrection.getEndKm());
+		assertEquals((short) 627, savedCorrection.getEndM());
+		assertEquals((short) 825, savedCorrection.getEndMm());
+
 		verify(fragmentRepository).save(any(CorrectionFragment.class));
 
 		ArgumentCaptor<CorrectionFragmentHardware> hwCaptor = ArgumentCaptor.forClass(CorrectionFragmentHardware.class);
@@ -292,5 +303,72 @@ class CorrectionPersistenceServiceTest {
 			}
 			return input.readAllBytes();
 		}
+	}
+
+	@Test
+	void shouldAllowDifferentPicketBoundsAndRejectMismatchedTrackMetadata() throws Exception {
+		SrvSurvey survey = new SurveyParser().parse(loadResource("/srv/srv2.srv"));
+		CrmCorrection base = new CorrectionParser().parse(loadResource("/crm/crm2.crm"));
+
+		Machine machine = mock(Machine.class);
+		MachineParams params = mock(MachineParams.class);
+		when(machinePersistenceService.getOrCreateMachine(any())).thenReturn(machine);
+		when(machinePersistenceService.getOrCreateMachineParams(eq(machine), any())).thenReturn(params);
+		when(fragmentRepository.save(any(CorrectionFragment.class))).thenAnswer(invocation -> {
+			CorrectionFragment saved = spy(invocation.getArgument(0, CorrectionFragment.class));
+			doReturn(404L).when(saved).getId();
+			return saved;
+		});
+
+		CrmHeader h = base.header();
+		TrackData t = h.track();
+		TrackData differentBoundsTrack = new TrackData(
+				t.trackNumber(),
+				new TrackPosition(t.begin().km(), (short) (t.begin().meters() + 10), t.begin().millimeters()),
+				t.end(),
+				t.administrativeCode(),
+				t.railway(),
+				t.direction(),
+				t.mainTrack(),
+				t.peregon(),
+				t.station1(),
+				t.stationPosition1(),
+				t.station2(),
+				t.stationPosition2()
+		);
+		CrmHeader differentBoundsHeader = new CrmHeader(
+				h.signature(), h.version(), h.correctionTime(), h.machine(), h.flags(),
+				h.channelMask(), h.stepSizeMm(), h.stepCount(), h.fragmentCount(),
+				h.rfidCount(), differentBoundsTrack, h.paddingBytes()
+		);
+
+		service.save(60L, survey, new CrmCorrection(differentBoundsHeader, base.fragments()));
+
+		ArgumentCaptor<Correction> correctionCaptor = ArgumentCaptor.forClass(Correction.class);
+		verify(correctionRepository).saveAndFlush(correctionCaptor.capture());
+		assertEquals((short) (t.begin().meters() + 10), correctionCaptor.getValue().getStartM());
+
+		TrackData mismatchedMetadataTrack = new TrackData(
+				"99",
+				t.begin(),
+				t.end(),
+				t.administrativeCode(),
+				t.railway(),
+				t.direction(),
+				t.mainTrack(),
+				t.peregon(),
+				t.station1(),
+				t.stationPosition1(),
+				t.station2(),
+				t.stationPosition2()
+		);
+		CrmHeader mismatchedHeader = new CrmHeader(
+				h.signature(), h.version(), h.correctionTime(), h.machine(), h.flags(),
+				h.channelMask(), h.stepSizeMm(), h.stepCount(), h.fragmentCount(),
+				h.rfidCount(), mismatchedMetadataTrack, h.paddingBytes()
+		);
+
+		assertThrows(CrmParsingException.class, () ->
+				service.save(60L, survey, new CrmCorrection(mismatchedHeader, base.fragments())));
 	}
 }

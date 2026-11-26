@@ -105,8 +105,8 @@ class WorkControllerTest {
 				"application/octet-stream",
 				"calculation content".getBytes()
 		);
-		MockMultipartFile workFile = new MockMultipartFile(
-				"workFile",
+		MockMultipartFile correctionFile = new MockMultipartFile(
+				"correctionFile",
 				"#83000235.crm",
 				"application/octet-stream",
 				"work content".getBytes()
@@ -117,7 +117,7 @@ class WorkControllerTest {
 		mockMvc.perform(multipart("/api/works")
 						.file(surveyFile)
 						.file(calculationFile)
-						.file(workFile))
+						.file(correctionFile))
 				.andExpect(status().isOk())
 				.andDo(document("work-files/upload",
 						preprocessResponse(prettyPrint()),
@@ -125,14 +125,13 @@ class WorkControllerTest {
 						requestParts(
 								partWithName("surveyFile").description("Файл съёмки"),
 								partWithName("calculationFile").description("Файл проекта"),
-								partWithName("workFile").description("Файл выправки")
+								partWithName("correctionFile").description("Файл выправки")
 						),
 						responseFields(
 								fieldWithPath("id").description("Уникальный ID созданной записи с файлами")
 						)
 				));
 	}
-
 	@Test
 	void downloadFile_shouldReturnFileContentAndHeader() throws Exception {
 		DownloadFileResponse fileResponse = new DownloadFileResponse(

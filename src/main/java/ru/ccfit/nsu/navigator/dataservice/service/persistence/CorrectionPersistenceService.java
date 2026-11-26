@@ -114,12 +114,7 @@ public class CorrectionPersistenceService {
 	}
 
 	private void validateTrackConsistency(TrackData srvTrack, TrackData crmTrack) {
-		if (!Objects.equals(srvTrack.begin(), crmTrack.begin())
-				|| !Objects.equals(srvTrack.end(), crmTrack.end())) {
-			throw new CrmParsingException("Track bounds PKT_BEGIN/PKT_END mismatch with SRV");
-		}
-
-		if (!Objects.equals(srvTrack, crmTrack)) {
+		if (!srvTrack.hasSameMetadata(crmTrack)) {
 			throw new CrmParsingException("Track metadata mismatch with SRV");
 		}
 	}
@@ -138,11 +133,17 @@ public class CorrectionPersistenceService {
 		validatePress(flags.press(), "header");
 		validateIntertrackSpace(flags.intertrackSpace(), "header");
 
+		TrackData track = header.track();
 		Correction entity = new Correction(
 				workId,
 				(short) header.version(),
 				header.correctionTime(),
 				header.channelMask()
+		);
+
+		entity.setTrackRange(
+				track.begin().km(), track.begin().meters(), track.begin().millimeters(),
+				track.end().km(), track.end().meters(), track.end().millimeters()
 		);
 
 		entity.setFlags(

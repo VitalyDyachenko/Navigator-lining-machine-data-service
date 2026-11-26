@@ -8,6 +8,10 @@ CREATE TABLE calculation
     computer_name VARCHAR(24),
 
     channel_mask INTEGER NOT NULL,
+
+    start_km INTEGER, start_m SMALLINT, start_mm SMALLINT,
+    end_km INTEGER, end_m SMALLINT, end_mm SMALLINT,
+
     otvod_count INTEGER NOT NULL,
 
     machine_params_id BIGINT NOT NULL REFERENCES machine_params (id),

@@ -7,6 +7,10 @@ CREATE TABLE correction
     correction_time TIMESTAMP,
 
     channel_mask INTEGER NOT NULL,
+
+    start_km INTEGER, start_m SMALLINT, start_mm SMALLINT,
+    end_km INTEGER, end_m SMALLINT, end_mm SMALLINT,
+
     -- TODO Вроде это хранить лишнее
     --fragment_count INTEGER NOT NULL,
     --rfid_count INTEGER NOT NULL,

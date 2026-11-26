@@ -33,7 +33,7 @@ public class WorkFilesService {
     private static final int SIGNATURE_LENGTH = 6;
     private static final ExpectedFileSpec SURVEY_SPEC = new ExpectedFileSpec("surveyFile", ".srv", "NavSRV");
     private static final ExpectedFileSpec CALCULATION_SPEC = new ExpectedFileSpec("calculationFile", ".prm", "NavPRM");
-    private static final ExpectedFileSpec WORK_SPEC = new ExpectedFileSpec("workFile", ".crm", "NavCRM");
+    private static final ExpectedFileSpec WORK_SPEC = new ExpectedFileSpec("correctionFile", ".crm", "NavCRM");
     private static final Set<String> KNOWN_SIGNATURES = Set.of(
             SURVEY_SPEC.signature(),
             CALCULATION_SPEC.signature(),

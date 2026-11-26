@@ -149,21 +149,22 @@ public class SurveyPersistenceService {
         work.setPeregon(peregon);
 
         work.setTrackInfo(track.trackNumber(), track.administrativeCode());
-        work.setTrackRange(
-                track.begin().km(), track.begin().meters(), track.begin().millimeters(),
-                track.end().km(), track.end().meters(), track.end().millimeters()
-        );
         work.setMeasurementInfo(header.stepSizeMm(), header.stepCount());
 
         return workRepository.save(work);
     }
 
     private void saveSurvey(Work work, MachineParams params, SrvHeader header) {
+        TrackData track = header.track();
         Survey survey = new Survey(
                 work.getId(), params, (short) header.version(),
                 header.surveyTime(), header.channelMask()
         );
 
+        survey.setTrackRange(
+                track.begin().km(), track.begin().meters(), track.begin().millimeters(),
+                track.end().km(), track.end().meters(), track.end().millimeters()
+        );
         setSurveyFlags(survey, header.flags());
         setSurveyTrip(survey, header.vpi());
 

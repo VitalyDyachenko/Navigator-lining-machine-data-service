@@ -8,6 +8,9 @@ CREATE TABLE survey
 
     channel_mask INTEGER NOT NULL,
 
+    start_km INTEGER, start_m SMALLINT, start_mm SMALLINT,
+    end_km INTEGER, end_m SMALLINT, end_mm SMALLINT,
+
     machine_params_id BIGINT NOT NULL REFERENCES machine_params (id),
 
         -- =========== Flag

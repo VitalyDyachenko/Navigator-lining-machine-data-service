@@ -16,6 +16,7 @@ import ru.ccfit.nsu.navigator.dataservice.exception.parsing.PrmParsingException;
 import ru.ccfit.nsu.navigator.dataservice.parser.common.model.ChannelInfo;
 import ru.ccfit.nsu.navigator.dataservice.parser.common.model.GeoCoordinate;
 import ru.ccfit.nsu.navigator.dataservice.parser.common.model.MachineData;
+import ru.ccfit.nsu.navigator.dataservice.parser.common.model.track.TrackData;
 import ru.ccfit.nsu.navigator.dataservice.parser.prm.CalculationParser;
 import ru.ccfit.nsu.navigator.dataservice.parser.prm.model.PrmCalculation;
 import ru.ccfit.nsu.navigator.dataservice.parser.prm.model.PrmCdtData;
@@ -92,14 +93,64 @@ class CalculationPersistenceServiceTest {
 	}
 
 	@Test
-	void shouldRejectPairWithDifferentPicketBounds() throws Exception {
+	void shouldAllowPairWithDifferentPicketBoundsAndSaveCalculationBounds() throws Exception {
 		SrvSurvey survey = new SurveyParser().parse(loadResource("/srv/srv.srv"));
 		PrmCalculation calculation = new CalculationParser().parse(loadResource("/prm/prm.prm"));
 
-		assertThrows(PrmParsingException.class, () -> service.save(1L, survey, calculation));
-		verifyNoInteractions(calculationRepository, channelRepository, otvodRepository);
+		Machine machine = mock(Machine.class);
+		MachineParams params = mock(MachineParams.class);
+		when(machinePersistenceService.getOrCreateMachine(any())).thenReturn(machine);
+		when(machinePersistenceService.getOrCreateMachineParams(eq(machine), any())).thenReturn(params);
+
+		service.save(1L, survey, calculation);
+
+		ArgumentCaptor<Calculation> calculationCaptor = ArgumentCaptor.forClass(Calculation.class);
+		verify(calculationRepository).saveAndFlush(calculationCaptor.capture());
+
+		Calculation saved = calculationCaptor.getValue();
+		assertEquals(155, saved.getStartKm());
+		assertEquals((short) 86, saved.getStartM());
+		assertEquals((short) 0, saved.getStartMm());
+		assertEquals(158, saved.getEndKm());
+		assertEquals((short) 58, saved.getEndM());
+		assertEquals((short) 328, saved.getEndMm());
 	}
 
+	@Test
+	void shouldRejectPairWithMismatchedTrackMetadata() throws Exception {
+		SrvSurvey survey = new SurveyParser().parse(loadResource("/srv/srv4.srv"));
+		PrmCalculation baseCalc = new CalculationParser().parse(loadResource("/prm/prm4.prm"));
+
+		PrmHeader h = baseCalc.header();
+		TrackData t = h.track();
+		TrackData alteredTrack = new TrackData(
+				"99",
+				t.begin(),
+				t.end(),
+				t.administrativeCode(),
+				t.railway(),
+				t.direction(),
+				t.mainTrack(),
+				t.peregon(),
+				t.station1(),
+				t.stationPosition1(),
+				t.station2(),
+				t.stationPosition2()
+		);
+		PrmHeader badTrackHeader = new PrmHeader(
+				h.signature(), h.version(), h.calculationTime(), h.machine(),
+				h.extraExit(), h.flags(), h.channelMask(), h.stepSizeMm(), h.stepCount(),
+				h.otvodCount(), h.setup(), h.surveyTime(), alteredTrack,
+				h.computerName(), h.channels(), h.cdtHeader(), h.paddingBytes()
+		);
+		PrmCalculation badTrackCalc = new PrmCalculation(
+				badTrackHeader, baseCalc.channelData(), baseCalc.cdtData(),
+				baseCalc.otvods(), baseCalc.geoCoordinates()
+		);
+
+		assertThrows(PrmParsingException.class, () -> service.save(1L, survey, badTrackCalc));
+		verifyNoInteractions(calculationRepository, channelRepository, otvodRepository);
+	}
 	@Test
 	void shouldAllowNullTimeSrvAndRejectMismatchedTimeSrv() throws Exception {
 		SrvSurvey survey = new SurveyParser().parse(loadResource("/srv/srv4.srv"));

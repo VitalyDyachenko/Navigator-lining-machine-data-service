@@ -123,17 +123,13 @@ public class CalculationPersistenceService {
 	}
 
 	private void validateTrackConsistency(TrackData srvTrack, TrackData prmTrack) {
-		if (!Objects.equals(srvTrack.begin(), prmTrack.begin())
-				|| !Objects.equals(srvTrack.end(), prmTrack.end())) {
-			throw new PrmParsingException("Track bounds PKT_BEGIN/PKT_END mismatch with SRV");
-		}
-
-		if (!Objects.equals(srvTrack, prmTrack)) {
+		if (!srvTrack.hasSameMetadata(prmTrack)) {
 			throw new PrmParsingException("Track metadata mismatch with SRV");
 		}
 	}
 
 	private void saveCalculation(Long workId, MachineParams params, PrmHeader header) {
+		TrackData track = header.track();
 		Calculation entity = new Calculation(
 				workId,
 				params,
@@ -142,6 +138,11 @@ public class CalculationPersistenceService {
 				header.computerName(),
 				header.channelMask(),
 				header.otvodCount()
+		);
+
+		entity.setTrackRange(
+				track.begin().km(), track.begin().meters(), track.begin().millimeters(),
+				track.end().km(), track.end().meters(), track.end().millimeters()
 		);
 
 		PrmFlags flags = header.flags();

@@ -20,24 +20,6 @@ public class Work {
     @Column(name = "adm_code")
     private Short administrativeCode;
 
-    @Column(name = "start_km")
-    private Integer startKm;
-
-    @Column(name = "start_m")
-    private Short startM;
-
-    @Column(name = "start_mm")
-    private Short startMm;
-
-    @Column(name = "end_km")
-    private Integer endKm;
-
-    @Column(name = "end_m")
-    private Short endM;
-
-    @Column(name = "end_mm")
-    private Short endMm;
-
     @Column(name = "step_size_mm")
     private Integer stepSizeMm;
 
@@ -82,19 +64,6 @@ public class Work {
     ) {
         this.trackNumber = trackNumber;
         this.administrativeCode = administrativeCode;
-    }
-
-    public void setTrackRange(
-            int startKm, short startM, short startMm,
-            int endKm, short endM, short endMm
-    ) {
-        this.startKm = startKm;
-        this.startM = startM;
-        this.startMm = startMm;
-
-        this.endKm = endKm;
-        this.endM = endM;
-        this.endMm = endMm;
     }
 
     public void setMeasurementInfo(

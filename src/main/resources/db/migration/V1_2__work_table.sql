@@ -9,9 +9,6 @@ CREATE TABLE work
     track_number VARCHAR(7),
     adm_code SMALLINT,
 
-    start_km INTEGER, start_m SMALLINT, start_mm SMALLINT,
-    end_km INTEGER, end_m SMALLINT, end_mm SMALLINT,
-
     step_size_mm INTEGER NOT NULL,
     step_count BIGINT NOT NULL
 );

@@ -21,6 +21,24 @@ public class Correction {
 	@Column(name = "channel_mask", nullable = false)
 	private int channelMask;
 
+	@Column(name = "start_km")
+	private Integer startKm;
+
+	@Column(name = "start_m")
+	private Short startM;
+
+	@Column(name = "start_mm")
+	private Short startMm;
+
+	@Column(name = "end_km")
+	private Integer endKm;
+
+	@Column(name = "end_m")
+	private Short endM;
+
+	@Column(name = "end_mm")
+	private Short endMm;
+
 	@Column(name = "against_picketage")
 	private Boolean againstPicketage;
 
@@ -91,5 +109,42 @@ public class Correction {
 
 	public LocalDateTime getCorrectionTime() {
 		return correctionTime;
+	}
+
+	// Установка границ пикетажа истории выправки
+	public void setTrackRange(
+			int startKm, short startM, short startMm,
+			int endKm, short endM, short endMm
+	) {
+		this.startKm = startKm;
+		this.startM = startM;
+		this.startMm = startMm;
+		this.endKm = endKm;
+		this.endM = endM;
+		this.endMm = endMm;
+	}
+
+	public Integer getStartKm() {
+		return startKm;
+	}
+
+	public Short getStartM() {
+		return startM;
+	}
+
+	public Short getStartMm() {
+		return startMm;
+	}
+
+	public Integer getEndKm() {
+		return endKm;
+	}
+
+	public Short getEndM() {
+		return endM;
+	}
+
+	public Short getEndMm() {
+		return endMm;
 	}
 }
