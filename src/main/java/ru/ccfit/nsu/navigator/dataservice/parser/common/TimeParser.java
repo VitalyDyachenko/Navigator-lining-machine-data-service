@@ -5,11 +5,26 @@ import java.time.LocalDateTime;
 
 public class TimeParser {
 
-	// Разбор структуры tsHTIME
+	// Разбор обязательной структуры tsHTIME
 	public LocalDateTime parse(BinaryReader reader) {
 		int offset = reader.position();
 		long packedTime = reader.readUnsignedInt();
+		return decode(reader, offset, packedTime);
+	}
 
+	// Разбор опциональной структуры tsHTIME с возвратом null при нулевом значении
+	public LocalDateTime parseOptional(BinaryReader reader) {
+		int offset = reader.position();
+		long packedTime = reader.readUnsignedInt();
+
+		if (packedTime == 0L) {
+			return null;
+		}
+
+		return decode(reader, offset, packedTime);
+	}
+
+	private LocalDateTime decode(BinaryReader reader, int offset, long packedTime) {
 		int year = (int) (packedTime & 0xFFF);
 		int month = (int) ((packedTime >>> 12) & 0xF);
 		int day = (int) ((packedTime >>> 16) & 0x1F);

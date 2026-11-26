@@ -123,17 +123,6 @@ VALUES
     (2, 'ПЦД'),
     (3, 'ПЧ');
 
-CREATE TABLE otvod_geometry_type
-(
-    id SMALLINT PRIMARY KEY,
-    name VARCHAR(30) NOT NULL
-);
-INSERT INTO otvod_geometry_type (id, name)
-VALUES
-    (1, 'План'),
-    (2, 'Уровень'),
-    (4, 'Профиль');
-
 CREATE TABLE calculation_otvod
 (
     id                           BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -149,7 +138,11 @@ CREATE TABLE calculation_otvod
     is_proportional              BOOLEAN  NOT NULL,
     is_corrected                 BOOLEAN  NOT NULL,
 
-    geometry_type_id             SMALLINT NOT NULL REFERENCES otvod_geometry_type (id),
+    -- Mask
+    is_plane                     BOOLEAN  NOT NULL,
+    is_level                     BOOLEAN  NOT NULL,
+    is_profile                   BOOLEAN  NOT NULL,
+
     mode_id                      SMALLINT NOT NULL REFERENCES otvod_mode (id),
     source_id                    SMALLINT NOT NULL REFERENCES otvod_source (id),
 
