@@ -14,6 +14,7 @@ import ru.ccfit.nsu.navigator.dataservice.dto.DownloadFileResponse;
 import ru.ccfit.nsu.navigator.dataservice.dto.WorkFilesResponse;
 import ru.ccfit.nsu.navigator.dataservice.exception.InvalidFileTypeException;
 import ru.ccfit.nsu.navigator.dataservice.exception.WorkNotFoundException;
+import ru.ccfit.nsu.navigator.dataservice.exception.parsing.SrvParsingException;
 import ru.ccfit.nsu.navigator.dataservice.service.WorkFilesService;
 
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
@@ -123,15 +124,90 @@ class WorkControllerTest {
 						preprocessResponse(prettyPrint()),
 						endpoint(),
 						requestParts(
-								partWithName("surveyFile").description("Файл съёмки"),
-								partWithName("calculationFile").description("Файл проекта"),
-								partWithName("correctionFile").description("Файл выправки")
+								partWithName("surveyFile").description("Файл съёмки (.srv)"),
+								partWithName("calculationFile").description("Файл проекта (.prm)"),
+								partWithName("correctionFile").description("Файл выправки (.crm)")
 						),
 						responseFields(
 								fieldWithPath("id").description("Уникальный ID созданной записи с файлами")
 						)
 				));
 	}
+
+	@Test
+	void uploadFiles_whenInvalidFileType_shouldReturn400() throws Exception {
+		// Подготовка частей запроса с неверным расширением файла съёмки
+		MockMultipartFile surveyFile = new MockMultipartFile(
+				"surveyFile",
+				"#83000235.prm",
+				"application/octet-stream",
+				"survey content".getBytes()
+		);
+		MockMultipartFile calculationFile = new MockMultipartFile(
+				"calculationFile",
+				"#83000235.prm",
+				"application/octet-stream",
+				"calculation content".getBytes()
+		);
+		MockMultipartFile correctionFile = new MockMultipartFile(
+				"correctionFile",
+				"#83000235.crm",
+				"application/octet-stream",
+				"work content".getBytes()
+		);
+
+		when(service.saveFiles(any(), any(), any()))
+				.thenThrow(InvalidFileTypeException.invalidExtension("surveyFile", ".srv", "#83000235.prm"));
+
+		mockMvc.perform(multipart("/api/works")
+						.file(surveyFile)
+						.file(calculationFile)
+						.file(correctionFile))
+				.andExpect(status().isBadRequest())
+				.andExpect(jsonPath("$.status").value(400))
+				.andExpect(jsonPath("$.code").value("INVALID_FILE_TYPE"))
+				.andDo(document("work-files/upload-invalid-file-type",
+						preprocessResponse(prettyPrint())
+				));
+	}
+
+	@Test
+	void uploadFiles_whenParserException_shouldReturn400() throws Exception {
+		// Проверка возврата ошибки разбора или согласованности содержимого файлов
+		MockMultipartFile surveyFile = new MockMultipartFile(
+				"surveyFile",
+				"#83000235.srv",
+				"application/octet-stream",
+				"broken survey".getBytes()
+		);
+		MockMultipartFile calculationFile = new MockMultipartFile(
+				"calculationFile",
+				"#83000235.prm",
+				"application/octet-stream",
+				"calculation content".getBytes()
+		);
+		MockMultipartFile correctionFile = new MockMultipartFile(
+				"correctionFile",
+				"#83000235.crm",
+				"application/octet-stream",
+				"work content".getBytes()
+		);
+
+		when(service.saveFiles(any(), any(), any()))
+				.thenThrow(new SrvParsingException("Invalid SRV file structure"));
+
+		mockMvc.perform(multipart("/api/works")
+						.file(surveyFile)
+						.file(calculationFile)
+						.file(correctionFile))
+				.andExpect(status().isBadRequest())
+				.andExpect(jsonPath("$.status").value(400))
+				.andExpect(jsonPath("$.code").value("PARSER_EXCEPTION"))
+				.andDo(document("work-files/upload-parser-error",
+						preprocessResponse(prettyPrint())
+				));
+	}
+
 	@Test
 	void downloadFile_shouldReturnFileContentAndHeader() throws Exception {
 		DownloadFileResponse fileResponse = new DownloadFileResponse(
